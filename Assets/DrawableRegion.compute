@@ -1,0 +1,28 @@
+#pragma kernel Clear
+#pragma kernel Update
+
+RWTexture2D<float4> canvas;
+
+float2 start;
+float2 end;
+float4 color;
+float size;
+
+[numthreads(8,8,1)]
+void Clear(uint3 id : SV_DispatchThreadID)
+{
+    canvas[id.xy] = float4(1, 1, 1, 1);
+}
+
+[numthreads(8,8,1)]
+void Update(uint3 id : SV_DispatchThreadID)
+{
+    for (int i = 0; i < 10; ++i) {
+        const float2 pos = lerp(start, end, i / 10.0f);
+
+        if (length(id.xy - pos) < size) {
+            canvas[id.xy] = color;
+            break;
+        }
+    }
+}
