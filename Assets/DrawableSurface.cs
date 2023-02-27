@@ -2,27 +2,34 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DrawableRegion : MonoBehaviour
+public class DrawableSurface : MonoBehaviour
 {
-    [SerializeField] ComputeShader _shader;
-    RenderTexture _texture;
+    [SerializeField] private ComputeShader _shader;
 
-    Vector4 _color;
-    Vector2? _lastPosition;
+    private RenderTexture _texture;
+    private Vector4 _color;
+    private Vector2? _lastPosition;
 
     void Start()
     {
+        // Create the texture that will be drawn on
         _texture = new RenderTexture(1024, 1024, 24);
         _texture.filterMode = FilterMode.Point;
         _texture.enableRandomWrite = true;
         _texture.Create();
 
-        GetComponent<Renderer>().material.mainTexture = _texture;
-
         int clearKernel = _shader.FindKernel("Clear");
 
         _shader.SetTexture(clearKernel, "canvas", _texture);
         _shader.Dispatch(clearKernel, _texture.width / 8, _texture.height / 8, 1);
+
+        // Setup the game object
+        GetComponent<Renderer>().material.mainTexture = _texture;
+
+        if ((GetComponent<Collider>() as MeshCollider) == null) {
+            gameObject.AddComponent(typeof(MeshCollider));
+        }
+
     }
 
     void Update()
