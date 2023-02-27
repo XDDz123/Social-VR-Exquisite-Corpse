@@ -4,14 +4,15 @@ using UnityEngine;
 
 public class DrawableSurface : MonoBehaviour
 {
-    [SerializeField] private ComputeShader _shader;
-
+    private ComputeShader _shader;
     private RenderTexture _texture;
     private Vector4 _color;
     private Vector2? _lastPosition;
 
     void Start()
     {
+        _shader = Instantiate<ComputeShader>(Resources.Load<ComputeShader>("Shader/DrawableSurface"));
+
         // Create the texture that will be drawn on
         _texture = new RenderTexture(1024, 1024, 24);
         _texture.filterMode = FilterMode.Point;
@@ -27,9 +28,8 @@ public class DrawableSurface : MonoBehaviour
         GetComponent<Renderer>().material.mainTexture = _texture;
 
         if ((GetComponent<Collider>() as MeshCollider) == null) {
-            gameObject.AddComponent(typeof(MeshCollider));
+            gameObject.AddComponent<MeshCollider>();
         }
-
     }
 
     void Update()
@@ -50,6 +50,7 @@ public class DrawableSurface : MonoBehaviour
             end.y = hit.textureCoord.y * _texture.height;
 
             if (_lastPosition is Vector2 start) {
+                _shader.SetTexture(updateKernel, "canvas", _texture);
                 _shader.SetVector("start", start);
                 _shader.SetVector("end", end);
                 _shader.SetVector("color", _color);
