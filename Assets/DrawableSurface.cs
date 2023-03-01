@@ -25,7 +25,9 @@ public class DrawableSurface : MonoBehaviour
         _shader.Dispatch(clearKernel, _texture.width / 8, _texture.height / 8, 1);
 
         // Setup the game object
-        GetComponent<Renderer>().material.mainTexture = _texture;
+        Renderer renderer = GetComponent<Renderer>();
+        renderer.material = new Material(renderer.material);
+        renderer.material.mainTexture = _texture;
 
         if ((GetComponent<Collider>() as MeshCollider) == null) {
             gameObject.AddComponent<MeshCollider>();

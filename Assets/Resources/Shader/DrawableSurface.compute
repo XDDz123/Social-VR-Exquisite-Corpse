@@ -17,8 +17,10 @@ void Clear(uint3 id : SV_DispatchThreadID)
 [numthreads(8,8,1)]
 void Update(uint3 id : SV_DispatchThreadID)
 {
-    for (int i = 0; i < 10; ++i) {
-        const float2 pos = lerp(start, end, i / 10.0f);
+    float distance = length(end - start);
+
+    for (int i = 0; i < ceil(distance); ++i) {
+        const float2 pos = lerp(start, end, i / distance);
 
         if (length(id.xy - pos) < size) {
             canvas[id.xy] = color;
