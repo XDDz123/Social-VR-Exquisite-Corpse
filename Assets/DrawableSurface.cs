@@ -4,30 +4,29 @@ using UnityEngine;
 
 public class DrawableSurface : MonoBehaviour
 {
-    private ComputeShader _shader;
+    private Material _material;
+    private Camera _camera;
     private RenderTexture _texture;
-    private Vector4 _color;
+    private Color _color;
     private Vector2? _lastPosition;
 
     void Start()
     {
-        _shader = Instantiate<ComputeShader>(Resources.Load<ComputeShader>("Shader/DrawableSurface"));
-
         // Create the texture that will be drawn on
         _texture = new RenderTexture(1024, 1024, 24);
         _texture.filterMode = FilterMode.Point;
         _texture.enableRandomWrite = true;
         _texture.Create();
 
-        int clearKernel = _shader.FindKernel("Clear");
+        Graphics.SetRenderTarget(_texture);
+        GL.Clear(false, true, Color.white);
 
-        _shader.SetTexture(clearKernel, "canvas", _texture);
-        _shader.Dispatch(clearKernel, _texture.width / 8, _texture.height / 8, 1);
+        _material = new Material(Shader.Find("DrawableSurface"));
+        _material.SetTexture("_MainTex", _texture);
 
-        // Setup the game object
-        Renderer renderer = GetComponent<Renderer>();
-        renderer.material = new Material(renderer.material);
-        renderer.material.mainTexture = _texture;
+        _color = Color.black;
+
+        GetComponent<Renderer>().material.mainTexture = _texture;
 
         if ((GetComponent<Collider>() as MeshCollider) == null) {
             gameObject.AddComponent<MeshCollider>();
@@ -44,24 +43,21 @@ public class DrawableSurface : MonoBehaviour
                 return;
             }
 
-            int updateKernel = _shader.FindKernel("Update");
-
-            Vector2 end;
-
-            end.x = hit.textureCoord.x * _texture.width;
-            end.y = hit.textureCoord.y * _texture.height;
-
             if (_lastPosition is Vector2 start) {
-                _shader.SetTexture(updateKernel, "canvas", _texture);
-                _shader.SetVector("start", start);
-                _shader.SetVector("end", end);
-                _shader.SetVector("color", _color);
-                _shader.SetFloat("size", 4.0f);
-                _shader.SetTexture(updateKernel, "canvas", _texture);
-                _shader.Dispatch(updateKernel, _texture.width / 8, _texture.height / 8, 1);
+                _material.SetVector("_Start", start);
+                _material.SetVector("_End", hit.textureCoord);
+                _material.SetColor("_Color", _color);
+                _material.SetFloat("_BrushSize", 0.01f);
+
+                RenderTexture tmp = RenderTexture.GetTemporary(_texture.width, _texture.height);
+
+                Graphics.Blit(_texture, tmp);
+                Graphics.Blit(tmp, _texture, _material);
+
+                RenderTexture.ReleaseTemporary(tmp);
             }
 
-            _lastPosition = end;
+            _lastPosition = hit.textureCoord;
         } else {
             _lastPosition = null;
         }
