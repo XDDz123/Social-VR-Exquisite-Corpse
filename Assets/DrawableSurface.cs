@@ -7,7 +7,7 @@ public class DrawableSurface : MonoBehaviour
     private Material _material;
     private Camera _camera;
     private RenderTexture _texture;
-    private Color _color;
+    public Color _color;
     private Vector2? _lastPosition;
 
     void Start()
