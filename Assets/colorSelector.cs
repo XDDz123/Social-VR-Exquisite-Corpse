@@ -7,8 +7,6 @@ public class colorSelector : MonoBehaviour
 {
     
     public GameObject showColor;
-    [SerializeField] private Color newColor;
-    private Color ButtonColor;
 	public GameObject _redButton;
     public GameObject _greenButton;
     public GameObject _blueButton;
@@ -25,7 +23,8 @@ public class colorSelector : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        colorScript._color = _redButton.GetComponent<Image>().color;
+    
+        
     }
 
     // Update is called once per frame
@@ -40,7 +39,7 @@ public class colorSelector : MonoBehaviour
 
 
         showColor.GetComponent<Image>().color = _redButton.GetComponent<Image>().color;
-        // colorScript._material.SetColor("_Color", _redButton.GetComponent<Image>().color);
+        colorScript._color = _redButton.GetComponent<Image>().color;
 
 
 
@@ -50,6 +49,7 @@ public class colorSelector : MonoBehaviour
 
 
         showColor.GetComponent<Image>().color = _blueButton.GetComponent<Image>().color;
+        colorScript._color = _blueButton.GetComponent<Image>().color;
 
     }
 
@@ -57,6 +57,7 @@ public class colorSelector : MonoBehaviour
 
 
         showColor.GetComponent<Image>().color = _greenButton.GetComponent<Image>().color;
+        colorScript._color =_greenButton.GetComponent<Image>().color;
 
     }
 
@@ -64,6 +65,8 @@ public class colorSelector : MonoBehaviour
 
 
         showColor.GetComponent<Image>().color = _blackButton.GetComponent<Image>().color;
+        colorScript._color = _blackButton.GetComponent<Image>().color;
+
 
     }
 }
