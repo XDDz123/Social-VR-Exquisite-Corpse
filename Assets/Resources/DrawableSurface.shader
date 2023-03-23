@@ -48,6 +48,15 @@ Shader "DrawableSurface"
 
                 float dist = 0;
 
+                // We can find the distance of our uv coordinates from the line using the following:
+                // https://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
+                // This assumes a line of infinite length, however.
+                //
+                // For a line segment, we must compare the relative position of the UV coordinate to
+                // the ends of the line. If the relative positions dot product is positive, then the
+                // projection of the UV coordinate onto the line does not lie between the two
+                // points. As such, we're only interested in the distance from the UV coordinate to
+                // the respective end point.
                 if (dot(_Start - _End, IN.uv - _Start) > 0) {
                     dist = distance(_Start, IN.uv);
                 } else if (dot(_End - _Start, IN.uv - _End) > 0) {
