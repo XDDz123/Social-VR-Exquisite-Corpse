@@ -103,7 +103,7 @@ public class DrawableSurface : MonoBehaviour
         Graphics.SetRenderTarget(_texture);
         GL.Clear(false, true, Color.white);
 
-        DrawOnCanvas(_material, _texture, new Vector2(0.3f, 0.5f), new Vector2(0.7f, 0.5f), _color, brush_size);
+        // DrawOnCanvas(_material, _texture, new Vector2(0.3f, 0.5f), new Vector2(0.7f, 0.5f), _color, brush_size);
     }
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)

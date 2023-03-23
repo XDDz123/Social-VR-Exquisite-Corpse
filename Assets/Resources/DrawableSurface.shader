@@ -61,7 +61,7 @@ Shader "DrawableSurface"
                 }
 
                 if (dist < _BrushSize) {
-                    return lerp(_Color, texel, min(0.98, dist / _BrushSize));
+                    return lerp(_Color, texel, smoothstep(0.8, 1.0, dist / _BrushSize));
                 }
 
                 return texel;
