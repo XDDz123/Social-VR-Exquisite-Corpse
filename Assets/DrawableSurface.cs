@@ -124,7 +124,7 @@ public class DrawableSurface : MonoBehaviour
             }
 
             DrawOnCanvas(_material_full, _texture_full, remote_start, remote_end, remote_color, remote_brush_size);
-        } 
+        }
         else
         {
             player_remaining = data.ms_player_remaining;
@@ -162,7 +162,6 @@ public class DrawableSurface : MonoBehaviour
 
                 if (Input.GetMouseButton(0))
                 {
-
                     RaycastHit hit;
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -202,9 +201,8 @@ public class DrawableSurface : MonoBehaviour
                     }
 
                     if (_lastPosition is Vector2 start)
-                    {                        
-
-                        // start the timer since we begin drawing here 
+                    {
+                        // start the timer since we begin drawing here
                         if (!count_down_start)
                         {
                             int ct = 0;
@@ -218,7 +216,7 @@ public class DrawableSurface : MonoBehaviour
                             {
                                 player_idx = ct;
                                 player_idxs.Add(ct);
-                            } 
+                            }
                             else
                             {
                                 _lastPosition = null;
@@ -228,7 +226,7 @@ public class DrawableSurface : MonoBehaviour
                             count_down_start = true;
                         }
 
-                        // limit which side the player can draw on       
+                        // limit which side the player can draw on
                         if (hit.textureCoord.x > 1.0f / player_count * player_idx || hit.textureCoord.x < 1.0f / player_count * (player_idx - 1.0f))
                         {
                             _lastPosition = null;

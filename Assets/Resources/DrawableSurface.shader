@@ -15,7 +15,7 @@ Shader "DrawableSurface"
 
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
@@ -33,7 +33,7 @@ Shader "DrawableSurface"
             float4 _Color;
             float  _BrushSize;
 
-            v2f vert(float4 vertex:POSITION, float2 uv:TEXCOORD0) 
+            v2f vert(float4 vertex:POSITION, float2 uv:TEXCOORD0)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(vertex);
@@ -44,27 +44,38 @@ Shader "DrawableSurface"
 
             float4 frag(v2f IN) : SV_TARGET
             {
-                float distance = 100.0f * length(_End - _Start);
+                const float4 texel = tex2D(_MainTex, IN.uv);
 
-                for (int i = 0; i < ceil(distance); ++i) {
-                    const float2 pos = lerp(_Start, _End, i / distance);
+                float dist = 0;
 
-                    if (length(IN.uv - pos) < _BrushSize) {
-                        return _Color;
-                    }
+                // We can find the distance of our uv coordinates from the line using the following:
+                // https://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
+                // This assumes a line of infinite length, however.
+                //
+                // For a line segment, we must compare the relative position of the UV coordinate to
+                // the ends of the line. If the relative positions dot product is positive, then the
+                // projection of the UV coordinate onto the line does not lie between the two
+                // points. As such, we're only interested in the distance from the UV coordinate to
+                // the respective end point.
+                if (dot(_Start - _End, IN.uv - _Start) > 0) {
+                    dist = distance(_Start, IN.uv);
+                } else if (dot(_End - _Start, IN.uv - _End) > 0) {
+                    dist = distance(_End, IN.uv);
+                } else {
+                    float2 dir = _End - _Start;
+                    float2 perp = float2(dir.y, -dir.x);
+                    perp = perp / length(perp);
+
+                    dist = abs(dot(perp, _Start - IN.uv));
                 }
 
-                // float2 dir = _End.xy - _Start.xy;
-                // float t = dot(IN.uv - _Start.xy, dir) / length(dir);
-                // float2 p = (IN.uv - _Start.xy) - t * dir;
-                //
-                // if (length(p) < _BrushSize) {
-                //     return _Color;
-                // }
+                if (dist < _BrushSize) {
+                    return lerp(_Color, texel, smoothstep(0.8, 1.0, dist / _BrushSize));
+                }
 
-                return tex2D(_MainTex, IN.uv);
+                return texel;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 
