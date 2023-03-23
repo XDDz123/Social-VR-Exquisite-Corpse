@@ -2,12 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 public class BrushSizeSelector : MonoBehaviour
 {
-	// public GameObject smallBrush, mediumBrush, largeBrush;
-    public DrawableSurface brushSize;
+    
+    
+    public DrawableSurface brushScript;
+    
+
+ //    public GameObject _blackButton;
+ //    public GameObject _whiteButton;
+
+ 
+
+
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -20,12 +29,28 @@ public class BrushSizeSelector : MonoBehaviour
         
     }
 
-   public void ChangeBrushSize(){
-    GameObject clickedObject = EventSystem.current.currentSelectedGameObject;
-    if(clickedObject != null){
-        string clickedObjectName = clickedObject.name;
-        Debug.Log("Clicked Object Name: " + clickedObjectName);
-    }
-}
 
+
+    public void ChangeBrushSizeToSmall(){
+
+        brushScript.brush_size = 0.005f;
+
+
+    }
+    public void ChangeBrushSizeToMedium(){
+
+
+        brushScript.brush_size = 0.01f;
+
+
+    }
+    public void ChangeBrushSizeToLarge(){
+
+
+        brushScript.brush_size = 0.05f;
+
+
+    }
+
+    
 }
