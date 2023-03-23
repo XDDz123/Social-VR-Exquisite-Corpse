@@ -4,16 +4,17 @@ using System.Collections.Generic;
 
 public class TopicSelection : MonoBehaviour
 {
-    public Button[] topicButtons; 
-    public Button[] voteButtons; 
-    public List<string> topics; 
-    public int numTopics = 3;
-    private Dictionary<string, int> voteCounts; 
+    public Button[] topicButtons; // The three buttons that will display the topics
+    public Text[] voteTexts; // The three texts that will display the vote counts
+    public List<string> topics; // The list of topics to choose from
+    public int numTopics = 3; // The number of topics to display
+    private Dictionary<string, int> voteCounts; // A dictionary that stores the number of votes for each topic
+
     void Start()
     {
         voteCounts = new Dictionary<string, int>();
 
-        
+        // Choose three random topics from the list
         List<string> chosenTopics = new List<string>();
         for (int i = 0; i < numTopics; i++)
         {
@@ -22,67 +23,48 @@ public class TopicSelection : MonoBehaviour
             chosenTopics.Add(topic);
             topics.RemoveAt(randIndex);
 
-            
+            // Initialize the vote count for this topic to 0
             voteCounts[topic] = 0;
         }
 
-        
+        // Set the text of each topic button to a random topic
         for (int i = 0; i < topicButtons.Length; i++)
         {
             if (i < chosenTopics.Count)
             {
                 topicButtons[i].GetComponentInChildren<Text>().text = chosenTopics[i];
-                topicButtons[i].interactable = true;
             }
             else
             {
-                topicButtons[i].interactable = false;
+                topicButtons[i].gameObject.SetActive(false);
             }
         }
 
-        
-        for (int i = 0; i < voteButtons.Length; i++)
+        // Set the text of each vote text to 0
+        for (int i = 0; i < voteTexts.Length; i++)
         {
-            voteButtons[i].GetComponentInChildren<Text>().text = "0";
-        }
-    }
-
-    void Update()
-    {
-       
-        for (int i = 0; i < voteButtons.Length; i++)
-        {
-            string topic = voteButtons[i].GetComponentInChildren<Text>().text;
-            if (voteCounts.ContainsKey(topic))
-            {
-                int voteCount = voteCounts[topic];
-                voteButtons[i].GetComponentInChildren<Text>().text = voteCount.ToString();
-            }
+            voteTexts[i].text = "0";
         }
     }
 
     public void Vote(Button button)
     {
-        Debug.Log("Clicked on topic button with text: " + button.GetComponentInChildren<Text>().text);
-        
         string topic = button.GetComponentInChildren<Text>().text;
 
- 
+        // Increment the vote count for this topic
         voteCounts[topic]++;
 
-        Debug.Log("Updated vote count for topic " + topic + " to " + voteCounts[topic]);
-
-        for (int i = 0; i < voteButtons.Length; i++)
+        // Update the text of the corresponding vote text to show the new vote count
+        for (int i = 0; i < topicButtons.Length; i++)
         {
-            if (voteButtons[i].GetComponentInChildren<Text>().text == topic)
+            if (topicButtons[i] == button)
             {
-                int voteCount = voteCounts[topic];
-                voteButtons[i].GetComponentInChildren<Text>().text = voteCount.ToString();
+                voteTexts[i].text = voteCounts[topic].ToString();
                 break;
             }
         }
 
-        
+        // Find the topic with the highest vote count
         string winningTopic = null;
         int maxVotes = 0;
         foreach (KeyValuePair<string, int> pair in voteCounts)
@@ -94,7 +76,7 @@ public class TopicSelection : MonoBehaviour
             }
         }
 
-      
+        // Display the winning topic
         Debug.Log("Current leader: " + winningTopic + " with " + maxVotes + " votes.");
     }
 }
