@@ -10,7 +10,7 @@ public class LaserPointer : MonoBehaviour
     void Start()
     {
         offset = new Vector3(0f, 0f, -0.001f);
-
+        GetComponent<Renderer>().enabled = false;
     }
 
     // Update is called once per frame

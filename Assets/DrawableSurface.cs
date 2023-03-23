@@ -23,8 +23,8 @@ public class DrawableSurface : MonoBehaviour
     public float timer = 10;
     private int player_remaining;
     private bool curr_player_done = false;
-    private float time_remaining;
-    private bool count_down_start = false;
+    public float time_remaining;
+    public bool count_down_start = false;
     private bool game_end = false;
 
     private Vector2 remote_start;
