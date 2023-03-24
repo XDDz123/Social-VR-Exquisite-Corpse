@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class Timer : MonoBehaviour
 {
-    public bool timerIsRunning = false;
     private TextMesh textMesh;
     private DrawableSurface canvas;
 
