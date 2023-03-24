@@ -6,10 +6,7 @@ using UnityEngine.UI;
 public class colorSelector : MonoBehaviour
 {
     public GameObject showColor;
-	public GameObject _redButton;
-    public GameObject _greenButton;
-    public GameObject _blueButton;
-    public GameObject _blackButton;
+    public Button[] colorButtons;
     private DrawableSurface _surface;
 
     void Start()
@@ -18,38 +15,14 @@ public class colorSelector : MonoBehaviour
         _surface = go.GetComponent<DrawableSurface>();
     }
 
-    public void ChangeShowColorToRed(){
+    public void ChangeColor(Button button){
 
 
-        showColor.GetComponent<Image>().color = _redButton.GetComponent<Image>().color;
-        _surface.brushColor = _redButton.GetComponent<Image>().color;
-
-
-
-    }
-
-    public void ChangeShowColorToBlue(){
-
-
-        showColor.GetComponent<Image>().color = _blueButton.GetComponent<Image>().color;
-        _surface.brushColor = _blueButton.GetComponent<Image>().color;
-
-    }
-
-    public void ChangeShowColorToGreen(){
-
-
-        showColor.GetComponent<Image>().color = _greenButton.GetComponent<Image>().color;
-        _surface.brushColor =_greenButton.GetComponent<Image>().color;
-
-    }
-
-    public void ChangeShowColorToBlack(){
-
-
-        showColor.GetComponent<Image>().color = _blackButton.GetComponent<Image>().color;
-        _surface.brushColor = _blackButton.GetComponent<Image>().color;
+        showColor.GetComponent<Image>().color = button.GetComponent<Image>().color;
+        _surface.brushColor = button.GetComponent<Image>().color;
 
 
     }
+
+  
 }

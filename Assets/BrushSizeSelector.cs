@@ -27,4 +27,9 @@ public class BrushSizeSelector : MonoBehaviour
     {
         _surface.brushSize = 0.05f;
     }
+
+    public void Eraser(){
+
+        _surface.brushColor = Color.white;
+    }
 }
