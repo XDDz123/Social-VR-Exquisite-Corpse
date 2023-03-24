@@ -33,8 +33,9 @@ public class DrawableSurface : MonoBehaviour
     private float remote_brush_size;
 
     private NetworkId me;
-    private List<int> player_idxs;
     private int player_idx;
+
+    private int drawable_side = -1;
 
     private struct Message
     {
@@ -43,16 +44,14 @@ public class DrawableSurface : MonoBehaviour
         public Color ms_color;
         public float ms_brush_size;
         public int ms_player_remaining;
-        public List<int> ms_player_idxs;
 
-        public Message(Vector2 start, Vector2 end, Color color, float brushSize, int player_remaining, List<int> player_idxs)
+        public Message(Vector2 start, Vector2 end, Color color, float brushSize, int player_remaining)
         {
             this.ms_start = start;
             this.ms_end = end;
             this.ms_color = color;
             this.ms_brush_size = brushSize;
             this.ms_player_remaining = player_remaining;
-            this.ms_player_idxs = player_idxs;
         }
     }
 
@@ -60,7 +59,6 @@ public class DrawableSurface : MonoBehaviour
     {
         context = NetworkScene.Register(this);
         me = context.Scene.Id;
-        player_idxs = new List<int>();
 
         // Create the texture that will be drawn on
         _texture = new RenderTexture(1024, 1024, 24);
@@ -114,8 +112,6 @@ public class DrawableSurface : MonoBehaviour
             remote_color = data.ms_color;
             remote_brush_size = data.ms_brush_size;
 
-            player_idxs = data.ms_player_idxs;
-
             float idx_start = 0.45f;
             float idx_end = 0.55f;
             if (remote_end.x > idx_start && remote_end.x < idx_end)
@@ -156,7 +152,7 @@ public class DrawableSurface : MonoBehaviour
                         player_remaining -= 1;
 
                         // dummy vars sent as message, conditioned in ProcessMessage to update only player_remaining
-                        context.SendJson(new Message(new Vector2(0,0), new Vector2(0, 0), brushColor, brushSize, player_remaining, player_idxs));
+                        context.SendJson(new Message(new Vector2(0,0), new Vector2(0, 0), brushColor, brushSize, player_remaining));
                     }
                 }
 
@@ -202,29 +198,19 @@ public class DrawableSurface : MonoBehaviour
 
                     if (_lastPosition is Vector2 start)
                     {
+                        if (drawable_side == -1)
+                        {
+                            _lastPosition = null;
+                            return;
+                        }
+
                         // start the timer since we begin drawing here
                         if (!count_down_start)
                         {
-                            int ct = 0;
-
-                            while (hit.textureCoord.x > 1.0 / player_count * ct)
-                            {
-                                ct += 1;
-                            }
-
-                            if (player_idxs.IndexOf(ct) == -1)
-                            {
-                                player_idx = ct;
-                                player_idxs.Add(ct);
-                            }
-                            else
-                            {
-                                _lastPosition = null;
-                                return;
-                            }
-
                             count_down_start = true;
                         }
+
+                        player_idx = drawable_side;
 
                         // limit which side the player can draw on
                         if (hit.textureCoord.x > 1.0f / player_count * player_idx || hit.textureCoord.x < 1.0f / player_count * (player_idx - 1.0f))
@@ -233,7 +219,7 @@ public class DrawableSurface : MonoBehaviour
                             return;
                         }
 
-                        context.SendJson(new Message(start, hit.textureCoord, brushColor, brushSize, player_remaining, player_idxs));
+                        context.SendJson(new Message(start, hit.textureCoord, brushColor, brushSize, player_remaining));
 
                         DrawOnCanvas(_material, _texture, start, hit.textureCoord, brushColor, brushSize);
                         DrawOnCanvas(_material_full, _texture_full, start, hit.textureCoord, brushColor, brushSize);
@@ -257,6 +243,13 @@ public class DrawableSurface : MonoBehaviour
                 game_end = true;
             }
         }
+    }
+
+    public void side(int s)
+    {
+        // s = 1 right
+        // s = 2 left
+        drawable_side = s;
     }
 
     void DrawOnCanvas(Material _material, RenderTexture _texture, Vector2 start, Vector2 end, Color brushColor, float brushSize)
