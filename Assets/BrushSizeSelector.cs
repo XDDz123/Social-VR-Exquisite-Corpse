@@ -5,52 +5,26 @@ using UnityEngine.UI;
 
 public class BrushSizeSelector : MonoBehaviour
 {
-    
-    
-    public DrawableSurface brushScript;
-    
+    private DrawableSurface _surface;
 
- //    public GameObject _blackButton;
- //    public GameObject _whiteButton;
-
- 
-
-
-    
-    // Start is called before the first frame update
     void Start()
     {
-        
+        GameObject go = GameObject.Find("Board");
+        _surface = go.GetComponent<DrawableSurface>();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ChangeBrushSizeToSmall()
     {
-        
+        _surface.brushSize = 0.005f;
     }
 
-
-
-    public void ChangeBrushSizeToSmall(){
-
-        brushScript.brush_size = 0.005f;
-
-
-    }
-    public void ChangeBrushSizeToMedium(){
-
-
-        brushScript.brush_size = 0.01f;
-
-
-    }
-    public void ChangeBrushSizeToLarge(){
-
-
-        brushScript.brush_size = 0.05f;
-
-
+    public void ChangeBrushSizeToMedium()
+    {
+        _surface.brushSize = 0.01f;
     }
 
-    
+    public void ChangeBrushSizeToLarge()
+    {
+        _surface.brushSize = 0.05f;
+    }
 }

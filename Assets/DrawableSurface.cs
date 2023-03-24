@@ -12,13 +12,13 @@ public class DrawableSurface : MonoBehaviour
     private Material _material;
     private Camera _camera;
     private RenderTexture _texture;
-    public Color _color;
+    public Color brushColor;
     private Vector2? _lastPosition;
 
     private Material _material_full;
     private RenderTexture _texture_full;
 
-    public float brush_size = 0.01f;
+    public float brushSize = 0.01f;
     public int player_count = 2;
     public float timer = 10;
     private int player_remaining;
@@ -45,12 +45,12 @@ public class DrawableSurface : MonoBehaviour
         public int ms_player_remaining;
         public List<int> ms_player_idxs;
 
-        public Message(Vector2 start, Vector2 end, Color color, float brush_size, int player_remaining, List<int> player_idxs)
+        public Message(Vector2 start, Vector2 end, Color color, float brushSize, int player_remaining, List<int> player_idxs)
         {
             this.ms_start = start;
             this.ms_end = end;
             this.ms_color = color;
-            this.ms_brush_size = brush_size;
+            this.ms_brush_size = brushSize;
             this.ms_player_remaining = player_remaining;
             this.ms_player_idxs = player_idxs;
         }
@@ -74,7 +74,7 @@ public class DrawableSurface : MonoBehaviour
         _material = new Material(Shader.Find("DrawableSurface"));
         _material.SetTexture("_MainTex", _texture);
 
-        _color = Color.black;
+        brushColor = Color.black;
 
         GetComponent<Renderer>().material.mainTexture = _texture;
 
@@ -156,7 +156,7 @@ public class DrawableSurface : MonoBehaviour
                         player_remaining -= 1;
 
                         // dummy vars sent as message, conditioned in ProcessMessage to update only player_remaining
-                        context.SendJson(new Message(new Vector2(0,0), new Vector2(0, 0), _color, brush_size, player_remaining, player_idxs));
+                        context.SendJson(new Message(new Vector2(0,0), new Vector2(0, 0), brushColor, brushSize, player_remaining, player_idxs));
                     }
                 }
 
@@ -233,10 +233,10 @@ public class DrawableSurface : MonoBehaviour
                             return;
                         }
 
-                        context.SendJson(new Message(start, hit.textureCoord, _color, brush_size, player_remaining, player_idxs));
+                        context.SendJson(new Message(start, hit.textureCoord, brushColor, brushSize, player_remaining, player_idxs));
 
-                        DrawOnCanvas(_material, _texture, start, hit.textureCoord, _color, brush_size);
-                        DrawOnCanvas(_material_full, _texture_full, start, hit.textureCoord, _color, brush_size);
+                        DrawOnCanvas(_material, _texture, start, hit.textureCoord, brushColor, brushSize);
+                        DrawOnCanvas(_material_full, _texture_full, start, hit.textureCoord, brushColor, brushSize);
                     }
 
                     _lastPosition = hit.textureCoord;
@@ -259,14 +259,14 @@ public class DrawableSurface : MonoBehaviour
         }
     }
 
-    void DrawOnCanvas(Material _material, RenderTexture _texture, Vector2 start, Vector2 end, Color _color, float brush_size)
+    void DrawOnCanvas(Material _material, RenderTexture _texture, Vector2 start, Vector2 end, Color brushColor, float brushSize)
     {
         Graphics.SetRenderTarget(_texture);
 
         _material.SetVector("_Start", start);
         _material.SetVector("_End", end);
-        _material.SetColor("_Color", _color);
-        _material.SetFloat("_BrushSize", brush_size);
+        _material.SetColor("_Color", brushColor);
+        _material.SetFloat("_BrushSize", brushSize);
 
         RenderTexture tmp = RenderTexture.GetTemporary(_texture.width, _texture.height);
 
