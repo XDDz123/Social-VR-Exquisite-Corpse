@@ -161,7 +161,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 541ce4a332a6a42a698f2555970c57c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brushScript: {fileID: 0}
 --- !u!1 &1563242619321535142
 GameObject:
   m_ObjectHideFlags: 0
@@ -217,7 +216,6 @@ MonoBehaviour:
   _greenButton: {fileID: 7006150906673958022}
   _blueButton: {fileID: 4210549973998989859}
   _blackButton: {fileID: 2580897564291213664}
-  colorScript: {fileID: 0}
 --- !u!1 &1894380518436583225
 GameObject:
   m_ObjectHideFlags: 0
@@ -351,6 +349,37 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!1 &2013366818872155694
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 997966456739663113}
+  m_Layer: 0
+  m_Name: Relative UI Spawn Control Panel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &997966456739663113
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2013366818872155694}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.1, z: 0.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8550174164240811492}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2270717711591740996
 GameObject:
   m_ObjectHideFlags: 0
@@ -3102,7 +3131,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 541ce4a332a6a42a698f2555970c57c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brushScript: {fileID: 0}
 --- !u!1 &7464572664388347654
 GameObject:
   m_ObjectHideFlags: 0
@@ -3453,6 +3481,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8550174165692116951}
+  - {fileID: 997966456739663113}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 17.598001, y: 18.149, z: 2.206}
@@ -3609,7 +3638,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00547a087aa0c4e2eac22e235562479a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _colorScript: {fileID: 0}
   _showColor: {fileID: 4341360268522876698}
   _small: {fileID: 2270717711591740996}
   _meidum: {fileID: 5287476891804700183}
