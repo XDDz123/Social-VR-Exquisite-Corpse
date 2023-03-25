@@ -674,7 +674,7 @@ GameObject:
   - component: {fileID: 55105907488446852}
   - component: {fileID: 2105393289383332326}
   m_Layer: 0
-  m_Name: ColourPickerPanel
+  m_Name: ControlPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1176,7 +1176,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Colour Picker
+  m_Text: Control Panel
 --- !u!1 &3803041644374839882
 GameObject:
   m_ObjectHideFlags: 0
