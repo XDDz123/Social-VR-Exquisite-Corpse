@@ -21,6 +21,11 @@ public class Timer : MonoBehaviour
         {
             DisplayTime(canvas.time_remaining);
         }
+        
+        if (canvas.player_remaining == 0)
+        {
+            textMesh.text = "--:--";
+        }
     }
     void DisplayTime(float timeToDisplay)
     {

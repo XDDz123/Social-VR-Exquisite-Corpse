@@ -21,7 +21,7 @@ public class DrawableSurface : MonoBehaviour
     public float brushSize = 0.01f;
     public int player_count = 2;
     public float timer = 10;
-    private int player_remaining;
+    public int player_remaining;
     private bool curr_player_done = false;
     public float time_remaining;
     public bool count_down_start = false;
@@ -130,6 +130,14 @@ public class DrawableSurface : MonoBehaviour
 
     void LateUpdate()
     {
+        GameObject go = GameObject.Find("Player Selector");
+
+        // do nothing when players haven't finished selecting sides
+        if (go != null && go.activeSelf)
+        {
+            return;
+        }
+        
         if (player_remaining > 0)
         {
             // stops drawing when the current player's timer runs out
