@@ -63,7 +63,7 @@ public class ColorSelector : MonoBehaviour
         button.GetComponent<Image>().color = color;
         button.gameObject.SetActive(true);
 
-        if (++_oldestColor > _palette.Length) {
+        if (++_oldestColor >= _palette.Length) {
             _oldestColor = 0;
         }
     }
