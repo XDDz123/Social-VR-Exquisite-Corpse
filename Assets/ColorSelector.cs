@@ -16,6 +16,7 @@ public class ColorSelector : MonoBehaviour
     public Slider hueSlider;
     public Slider saturationSlider;
     public Slider valueSlider;
+    public Slider brushSizeSlider;
 
     public RectTransform paletteTransform;
     public int paletteSize = 10;
@@ -44,11 +45,11 @@ public class ColorSelector : MonoBehaviour
 
     void Start()
     {
-        SetupSlider(hueSlider);
-        SetupSlider(saturationSlider);
-        SetupSlider(valueSlider);
+        SetupColorSlider(hueSlider);
+        SetupColorSlider(saturationSlider);
+        SetupColorSlider(valueSlider);
         SetupHistory();
-        valueSlider.value = 1;
+        SetupBrushSize();
 
         _surface = GameObject.Find("Board")?.GetComponent<DrawableSurface>();
 
@@ -68,7 +69,17 @@ public class ColorSelector : MonoBehaviour
         }
     }
 
-    private void SetupSlider(Slider slider)
+    public void UseBrush()
+    {
+        _surface.brushColor = color;
+    }
+
+    public void UseEraser()
+    {
+        _surface.brushColor = Color.white;
+    }
+
+    private void SetupColorSlider(Slider slider)
     {
         if (slider == null) {
             return;
@@ -95,6 +106,17 @@ public class ColorSelector : MonoBehaviour
             button.onClick.AddListener(() => color = button.GetComponent<Image>().color);
             _palette[i] = button;
         }
+    }
+
+    private void SetupBrushSize()
+    {
+        if (brushSizeSlider == null) {
+            return;
+        }
+
+        brushSizeSlider.onValueChanged.AddListener(delegate { UpdateBrushSize(); });
+        brushSizeSlider.minValue = 1;
+        brushSizeSlider.maxValue = 5;
     }
 
     private Texture2D GenerateTexture(Channel channel)
@@ -153,6 +175,13 @@ public class ColorSelector : MonoBehaviour
 
         if (_surface != null) {
             _surface.brushColor = color;
+        }
+    }
+
+    private void UpdateBrushSize()
+    {
+        if (_surface != null) {
+            _surface.brushSize = 0.01f * brushSizeSlider.value;
         }
     }
 }
