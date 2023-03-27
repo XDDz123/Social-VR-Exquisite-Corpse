@@ -16,11 +16,13 @@ public class RestartMenu : MonoBehaviour
 
     private struct Message
     {
+        public bool request;
         public bool flag;
         public float time;
 
-        public Message(bool flag, float time)
+        public Message(bool request, bool flag, float time)
         {
+            this.request = request;
             this.flag = flag;
             this.time = time;
         }
@@ -30,16 +32,23 @@ public class RestartMenu : MonoBehaviour
     {
         var data = msg.FromJson<Message>();
 
-        if (data.flag)
+        if (!data.request)
         {
-            Reset();
+            if (data.flag)
+            {
+                Reset();
+            }
+            else
+            {
+                updating = true;
+                UpdateTime(data.time);
+                UpdateSlider(data.time);
+                updating = false;
+            }
         } 
         else
         {
-            updating = true;
-            UpdateTime(data.time);
-            UpdateSlider(data.time);
-            updating = false;
+            context.SendJson(new Message(false, false, time.value));
         }
     }
 
@@ -60,6 +69,7 @@ public class RestartMenu : MonoBehaviour
     {
         context = NetworkScene.Register(this);
         button.onClick.AddListener(ResetListener);
+        RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
 
         time.onValueChanged.AddListener(delegate { TimerListener(); });
         time.minValue = 10;
@@ -74,7 +84,7 @@ public class RestartMenu : MonoBehaviour
         if (!updating)
         {
             UpdateTime(time.value);
-            context.SendJson(new Message(false, time.value));
+            context.SendJson(new Message(false, false, time.value));
         }
     }
 
@@ -111,6 +121,11 @@ public class RestartMenu : MonoBehaviour
     public void ResetListener()
     {
         Reset();
-        context.SendJson(new Message(true, 0));
+        context.SendJson(new Message(false, true, 0));
+    }
+
+    void OnRoom(IRoom other)
+    {
+        context.SendJson(new Message(true, true, 0));
     }
 }

@@ -63,7 +63,7 @@ public class PlayerSelector : MonoBehaviour
     {
         GameObject GO = GameObject.Find("Board");
         DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.side(2);
+        canvas.side(1);
 
         left.enabled = false;
         right.interactable = false;
