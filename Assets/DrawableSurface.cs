@@ -1,9 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using Ubiq.Messaging;
 using Ubiq.Rooms;
-using System;
 using UnityEditor;
 
 public class DrawableSurface : MonoBehaviour
@@ -20,13 +21,10 @@ public class DrawableSurface : MonoBehaviour
     private Color _brushColor = Color.black;
     private float _brushSize = 0.01f;
 
+    private GameSystem.State _gameState;
+
     public int player_count = 2;
-    public float timer = 10;
     public int player_remaining;
-    public bool curr_player_done;
-    public float time_remaining;
-    public bool count_down_start;
-    private bool game_end;
 
     private Vector2 remote_start;
     private Vector2 remote_end;
@@ -44,8 +42,13 @@ public class DrawableSurface : MonoBehaviour
     public Vector3 PenDirection;
     public bool drawing;
 
-    public GameObject restart;
+    [Serializable]
+    public class DrawingBegunEvent : UnityEvent {};
+    public DrawingBegunEvent onDrawingBegun = new DrawingBegunEvent();
 
+    [Serializable]
+    public class ActivePlayerLeftEvent : UnityEvent {};
+    public ActivePlayerLeftEvent onActivePlayerLeft  = new ActivePlayerLeftEvent();
 
     private struct Message
     {
@@ -72,30 +75,13 @@ public class DrawableSurface : MonoBehaviour
     public void Start()
     {
         context = NetworkScene.Register(this);
-        StartHelper();
-    }
-
-    public void StartHelper()
-    {
         me = context.Scene.Id;
-
-        local_tex = new Texture2D(1024, 1024);
-
-        curr_players = new List<NetworkId>();
-
-        _drawableSide = -1;
-        curr_player_done = false;
-        count_down_start = false;
-        game_end = false;
 
         // Create the texture that will be drawn on
         _texture = new RenderTexture(1024, 1024, 24);
         _texture.filterMode = FilterMode.Point;
         _texture.enableRandomWrite = true;
         _texture.Create();
-
-        Graphics.SetRenderTarget(_texture);
-        GL.Clear(false, true, Color.white);
 
         Vector2 textureScale = new Vector2(transform.localScale.x, transform.localScale.z);
 
@@ -110,8 +96,6 @@ public class DrawableSurface : MonoBehaviour
             gameObject.AddComponent<MeshCollider>();
         }
 
-        player_remaining = player_count;
-
         _texture_full = new RenderTexture(_texture.width, _texture.height, 24);
         _texture_full.filterMode = FilterMode.Point;
         _texture_full.enableRandomWrite = true;
@@ -121,14 +105,10 @@ public class DrawableSurface : MonoBehaviour
         _material_full.mainTexture = _texture_full;
         _material_full.mainTextureScale = textureScale;
 
-        Graphics.SetRenderTarget(_texture_full);
-        GL.Clear(false, true, Color.white);
-
-        Graphics.SetRenderTarget(_texture);
-        GL.Clear(false, true, Color.white);
-
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
         RoomClient.Find(this).OnPeerRemoved.AddListener(OnLeave);
+
+        Reset();
     }
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
@@ -232,6 +212,45 @@ public class DrawableSurface : MonoBehaviour
         _brushSize = 0.01f * size;
     }
 
+    public void UpdateSide(int side)
+    {
+        // s = 1 right
+        // s = 2 left
+        _drawableSide = side;
+
+        if (!curr_players.Contains(me))
+        {
+            curr_players.Add(me);
+        }
+    }
+
+    public void OnGameStateChanged(GameSystem.State state)
+    {
+        _gameState = state;
+
+        switch(state)
+        {
+            case GameSystem.State.Prepare:
+                Reset();
+                break;
+
+            case GameSystem.State.InProgress:
+                break;
+
+            case GameSystem.State.Finished:
+                player_remaining -= 1;
+
+                // dummy vars sent as message, conditioned in ProcessMessage to update only
+                // player_remaining
+                context.SendJson(new Message(2, new Vector2(0,0), new Vector2(0, 0),
+                                 _brushColor, _brushSize, player_remaining, curr_players));
+
+                Graphics.SetRenderTarget(_texture_full);
+                GetComponent<Renderer>().material.mainTexture = _texture_full;
+                break;
+        }
+    }
+
     void LateUpdate()
     {
         // GameObject go = GameObject.Find("Player Selector");
@@ -243,145 +262,90 @@ public class DrawableSurface : MonoBehaviour
             return;
         }
 
-        if (player_remaining > 0)
+        switch(_gameState)
         {
-            // stops drawing when the current player's timer runs out
-            if (!curr_player_done)
+            case GameSystem.State.Prepare:
+                if (_drawableSide != -1) {
+                    onDrawingBegun?.Invoke();
+                }
+                return;
+
+            case GameSystem.State.Finished:
+                return;
+        }
+
+        if (drawing || Input.GetMouseButton(0))
+        {
+            RaycastHit hit;
+            bool rayHit = false;
+
+            if (drawing) {
+                rayHit = Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f);
+            } else {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                rayHit = Physics.Raycast(ray, out hit, 100.0f);
+            }
+
+            if (!rayHit)
             {
-                // start timer when the player starts drawing
-                // count_down_start is set to true upon first pixel update
-                if (count_down_start)
-                {
-                    if (time_remaining > 0)
-                    {
-                        time_remaining -= Time.deltaTime;
-                    }
-                    else
-                    {
-                        Debug.Log("Time run out!");
-                        time_remaining = timer;
-                        count_down_start = false;
-                        curr_player_done = true;
-                        player_remaining -= 1;
+                // reset _lastPosition whenever raycasting no longer hits the object
+                // i.e. draw line should no longer connect when moving the cursor out of the canvas area
+                _lastPosition = null;
+                return;
+            }
 
-                        // dummy vars sent as message, conditioned in ProcessMessage to update only player_remaining
-                        context.SendJson(new Message(2, new Vector2(0,0), new Vector2(0, 0),
-                                         _brushColor, _brushSize, player_remaining, curr_players));
-                    }
-                }
+            // fixes "Texture coordinate channel "0" not found" error when accessing hit.textureCoord
+            // patch inspired by https://github.com/microsoft/MixedRealityToolkit-Unity/issues/10339
+            // and https://github.com/microsoft/MixedRealityToolkit-Unity/pull/10370
+            MeshCollider meshCollider = hit.collider as MeshCollider;
 
-                if (drawing || Input.GetMouseButton(0))
-                {
-                    RaycastHit hit;
-                    bool rayHit = false;
+            if (meshCollider == null)
+            {
+                _lastPosition = null;
+                return;
+            }
 
-                    if (drawing) {
-                        rayHit = Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f);
-                    } else {
-                        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                        rayHit = Physics.Raycast(ray, out hit, 100.0f);
-                    }
+            Mesh sharedMesh = meshCollider.sharedMesh;
+            if (sharedMesh == null || !sharedMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0))
+            {
+                _lastPosition = null;
+                return;
+            }
 
-                    if (!rayHit)
-                    {
-                        // reset _lastPosition whenever raycasting no longer hits the object
-                        // i.e. draw line should no longer connect when moving the cursor out of the canvas area
-                        _lastPosition = null;
-                        return;
-                    }
+            // checks if the hit object is the drawing canvas
+            // canvas obj's tag is set to "Canvas" in unity
 
-                    // fixes "Texture coordinate channel "0" not found" error when accessing hit.textureCoord
-                    // patch inspired by https://github.com/microsoft/MixedRealityToolkit-Unity/issues/10339
-                    // and https://github.com/microsoft/MixedRealityToolkit-Unity/pull/10370
-                    MeshCollider meshCollider = hit.collider as MeshCollider;
+            if (!meshCollider.CompareTag("Canvas"))
+            {
+                _lastPosition = null;
+                return;
+            }
 
-                    if (meshCollider == null)
-                    {
-                        _lastPosition = null;
-                        return;
-                    }
+            Vector2 end = hit.textureCoord;
 
-                    Mesh sharedMesh = meshCollider.sharedMesh;
-                    if (sharedMesh == null || !sharedMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0))
-                    {
-                        _lastPosition = null;
-                        return;
-                    }
-
-                    // checks if the hit object is the drawing canvas
-                    // canvas obj's tag is set to "Canvas" in unity
-
-                    if (!meshCollider.CompareTag("Canvas"))
-                    {
-                        _lastPosition = null;
-                        return;
-                    }
-
-                    Vector2 end = hit.textureCoord;
-
-                    if (_lastPosition is Vector2 start)
-                    {
-                        if (_drawableSide == -1)
-                        {
-                            _lastPosition = null;
-                            return;
-                        }
-
-                        // limit which side the player can draw on
-                        if (end.x > 1.0f / player_count * _drawableSide ||
-                            end.x < 1.0f / player_count * (_drawableSide - 1.0f))
-                        {
-                            _lastPosition = null;
-                            return;
-                        }
-
-                        // start the timer since we begin drawing here
-                        if (!count_down_start)
-                        {
-                            count_down_start = true;
-                            time_remaining = timer;
-
-                            if (!curr_players.Contains(me))
-                            {
-                                curr_players.Add(me);
-                            }
-                        }
-
-                        context.SendJson(new Message(2, start, end, _brushColor, _brushSize,
-                                                     player_remaining, curr_players));
-
-                        DrawOnCanvas(_material, _texture, start, end, _brushColor, _brushSize);
-                        DrawOnCanvas(_material_full, _texture_full, start, end, _brushColor, _brushSize);
-                    }
-
-                    _lastPosition = end;
-                }
-                else
+            if (_lastPosition is Vector2 start)
+            {
+                // limit which side the player can draw on
+                if (end.x > 1.0f / player_count * _drawableSide ||
+                    end.x < 1.0f / player_count * (_drawableSide - 1.0f))
                 {
                     _lastPosition = null;
+                    return;
                 }
+
+                context.SendJson(new Message(2, start, end, _brushColor, _brushSize,
+                                             player_remaining, curr_players));
+
+                DrawOnCanvas(_material, _texture, start, end, _brushColor, _brushSize);
+                DrawOnCanvas(_material_full, _texture_full, start, end, _brushColor, _brushSize);
             }
-        }
-        else
-        {
-            if (!game_end)
-            {
-                // do stuff
-                Graphics.SetRenderTarget(_texture_full);
-                GetComponent<Renderer>().material.mainTexture = _texture_full;
-                game_end = true;
-            }
+
+            _lastPosition = end;
         }
     }
 
-    public void Side(int s)
-    {
-        // s = 1 right
-        // s = 2 left
-        _drawableSide = s;
-    }
-
-    void DrawOnCanvas(Material material, RenderTexture texture, Vector2 start, Vector2 end, Color brushColor, float brushSize)
+    private void DrawOnCanvas(Material material, RenderTexture texture, Vector2 start, Vector2 end,
+                              Color brushColor, float brushSize)
     {
         Graphics.SetRenderTarget(_texture);
 
@@ -412,7 +376,8 @@ public class DrawableSurface : MonoBehaviour
     void OnRoom(IRoom other)
     {
         // clear canvas when joining room
-        StartHelper();
+        Reset();
+
         // request info when joining room
         Vector2 temp = new Vector2(0, 0);
         context.SendJson(new Message(0, temp, temp, _brushColor, 0f, 0, curr_players));
@@ -422,8 +387,22 @@ public class DrawableSurface : MonoBehaviour
     {
         if (curr_players.Contains(other.networkId))
         {
-            RestartMenu rt = restart.GetComponent<RestartMenu>();
-            rt.ResetListener();
+            onActivePlayerLeft?.Invoke();
         }
+    }
+
+    private void Reset()
+    {
+        _gameState = GameSystem.State.Prepare;
+        _drawableSide = -1;
+
+        curr_players = new List<NetworkId>();
+        player_remaining = player_count;
+
+        Graphics.SetRenderTarget(_texture);
+        GL.Clear(false, true, Color.white);
+
+        Graphics.SetRenderTarget(_texture_full);
+        GL.Clear(false, true, Color.white);
     }
 }

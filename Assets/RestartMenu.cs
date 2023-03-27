@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using Ubiq.Messaging;
 using Ubiq.Rooms;
 
@@ -9,23 +11,25 @@ using Ubiq.Rooms;
 public class RestartMenu : MonoBehaviour
 {
     private NetworkContext context;
-    public Button button;
-    public Slider time;
-    private bool updating;
+    private bool updating = false;
+
+    public Slider gameLengthSlider;
     public GameObject PS;
     public Button pen_tp;
     public GameObject pen;
 
+    [Serializable]
+    public class GameLengthChangedEvent : UnityEvent<float> {}
+    public GameLengthChangedEvent onGameLengthChanged = new GameLengthChangedEvent();
+
     private struct Message
     {
         public bool request;
-        public bool flag;
         public float time;
 
-        public Message(bool request, bool flag, float time)
+        public Message(bool request, float time)
         {
             this.request = request;
-            this.flag = flag;
             this.time = time;
         }
     }
@@ -36,101 +40,56 @@ public class RestartMenu : MonoBehaviour
 
         if (!data.request)
         {
-            if (data.flag)
-            {
-                Reset();
-            }
-            else
-            {
-                updating = true;
-                UpdateTime(data.time);
-                UpdateSlider(data.time);
-                updating = false;
-            }
-        } 
+            updating = true;
+            gameLengthSlider.value = data.time;
+            updating = false;
+        }
         else
         {
-            context.SendJson(new Message(false, false, time.value));
+            context.SendJson(new Message(false, gameLengthSlider.value));
         }
     }
 
-    void Update()
+    public void OnGameStateChanged(GameSystem.State state)
     {
-        if (PS.activeSelf)
-        {
-            time.gameObject.SetActive(true);
-        } 
-        else
-        {
-            time.gameObject.SetActive(false);
+        switch(state) {
+            case GameSystem.State.Prepare:
+                goto case GameSystem.State.Finished;
+
+            case GameSystem.State.InProgress:
+                gameLengthSlider.interactable = false;
+                break;
+
+            case GameSystem.State.Finished:
+                gameLengthSlider.interactable = true;
+                break;
         }
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         context = NetworkScene.Register(this);
-        button.onClick.AddListener(ResetListener);
         pen_tp.onClick.AddListener(PenListener);
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
 
-        time.onValueChanged.AddListener(delegate { TimerListener(); });
-        time.minValue = 10;
-        time.maxValue = 300;
-        time.value = 10;
-
-        updating = false;
+        gameLengthSlider.onValueChanged.AddListener(delegate { UpdateGameLength(); });
+        gameLengthSlider.minValue = 10;
+        gameLengthSlider.maxValue = 300;
+        gameLengthSlider.value = 10;
     }
 
-    void TimerListener() 
+    void UpdateGameLength()
     {
         if (!updating)
         {
-            UpdateTime(time.value);
-            context.SendJson(new Message(false, false, time.value));
+            onGameLengthChanged?.Invoke(gameLengthSlider.value);
+            context.SendJson(new Message(false, gameLengthSlider.value));
         }
-    }
-
-    void UpdateTime(float value)
-    {
-        GameObject GO = GameObject.Find("Board");
-        DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.timer = Mathf.Round(value);
-    }
-
-    void UpdateSlider(float value)
-    {
-        time.value = value;
-    }
-
-    private void Reset()
-    {
-        GameObject GO = GameObject.Find("Board");
-        DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.StartHelper();
-
-        GameObject TimerGO = GameObject.Find("Timer");
-        Timer timer = TimerGO.GetComponent<Timer>();
-        timer.Start();
-
-        // might become null when obj set to inactive
-        if (PS != null)
-        {
-            PlayerSelector ps = PS.GetComponent<PlayerSelector>();
-            ps.StartHelper();
-        }
-    }
-
-
-    public void ResetListener()
-    {
-        Reset();
-        context.SendJson(new Message(false, true, 0));
     }
 
     void OnRoom(IRoom other)
     {
-        context.SendJson(new Message(true, true, 0));
+        context.SendJson(new Message(true, 0));
     }
 
     public void PenListener()

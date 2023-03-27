@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using Ubiq.Messaging;
 using Ubiq.Rooms;
 
@@ -27,36 +29,35 @@ public class PlayerSelector : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
+    [Serializable]
+    public class SideChangedEvent : UnityEvent<int> {}
+    public SideChangedEvent onSideChanged = new SideChangedEvent();
+
+    public void OnGameStateChanged(GameSystem.State state)
+    {
+        switch(state)
+        {
+            case GameSystem.State.Prepare:
+                Reset();
+                break;
+
+            case GameSystem.State.InProgress:
+                menu.SetActive(false);
+                break;
+        }
+    }
+
     public void Start()
     {
         context = NetworkScene.Register(this);
+
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
-
-        Button left_btn = left.GetComponent<Button>();
-        left_btn.onClick.AddListener(OnClickLeft);
-
-        Button right_btn = right.GetComponent<Button>();
-        right_btn.onClick.AddListener(OnClickRight);
-
-        StartHelper();
+        Reset();
     }
 
-    public void StartHelper()
+    public void OnClickLeft()
     {
-        menu.SetActive(true);
-
-        left.interactable = true;
-        right.interactable = true;
-        left.enabled = true;
-        right.enabled = true;
-    }
-
-    void OnClickLeft()
-    {
-        GameObject GO = GameObject.Find("Board");
-        DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.Side(2);
+        onSideChanged?.Invoke(2);
 
         right.enabled = false;
         left.interactable = false;
@@ -64,11 +65,9 @@ public class PlayerSelector : MonoBehaviour
         context.SendJson(new Message(false, left.interactable, right.interactable));
     }
 
-    void OnClickRight()
+    public void OnClickRight()
     {
-        GameObject GO = GameObject.Find("Board");
-        DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.Side(1);
+        onSideChanged?.Invoke(1);
 
         left.enabled = false;
         right.interactable = false;
@@ -76,19 +75,9 @@ public class PlayerSelector : MonoBehaviour
         context.SendJson(new Message(false, left.interactable, right.interactable));
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (!left.interactable && !right.interactable)
-        {
-            menu.SetActive(false);
-        }
-    }
-
     void OnRoom(IRoom other)
     {
-        // reset state
-        StartHelper();
+        Reset();
 
         // send message to request the state of the obj from other players
         context.SendJson(new Message(true, left.enabled, right.enabled));
@@ -108,5 +97,16 @@ public class PlayerSelector : MonoBehaviour
             left.interactable = data.left;
             right.interactable = data.right;
         }
+    }
+
+    private void Reset()
+    {
+        menu.SetActive(true);
+        left.interactable = true;
+        right.interactable = true;
+        left.enabled = true;
+        right.enabled = true;
+
+        context.SendJson(new Message(false, left.interactable, right.interactable));
     }
 }
