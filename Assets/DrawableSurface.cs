@@ -44,6 +44,9 @@ public class DrawableSurface : MonoBehaviour
     public Vector3 PenDirection;
     public bool drawing;
 
+    public GameObject restart;
+
+
     private struct Message
     {
         public Vector2 ms_start;
@@ -69,6 +72,11 @@ public class DrawableSurface : MonoBehaviour
     public void Start()
     {
         context = NetworkScene.Register(this);
+        StartHelper();
+    }
+
+    public void StartHelper()
+    {
         me = context.Scene.Id;
 
         local_tex = new Texture2D(1024, 1024);
@@ -120,6 +128,7 @@ public class DrawableSurface : MonoBehaviour
         GL.Clear(false, true, Color.white);
 
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
+        RoomClient.Find(this).OnPeerRemoved.AddListener(OnLeave);
     }
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
@@ -402,8 +411,19 @@ public class DrawableSurface : MonoBehaviour
 
     void OnRoom(IRoom other)
     {
+        // clear canvas when joining room
+        StartHelper();
         // request info when joining room
         Vector2 temp = new Vector2(0, 0);
         context.SendJson(new Message(0, temp, temp, _brushColor, 0f, 0, curr_players));
+    }
+
+    void OnLeave(IPeer other)
+    {
+        if (curr_players.Contains(other.networkId))
+        {
+            RestartMenu rt = restart.GetComponent<RestartMenu>();
+            rt.ResetListener();
+        }
     }
 }

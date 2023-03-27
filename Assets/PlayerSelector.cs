@@ -39,6 +39,11 @@ public class PlayerSelector : MonoBehaviour
         Button right_btn = right.GetComponent<Button>();
         right_btn.onClick.AddListener(OnClickRight);
 
+        StartHelper();
+    }
+
+    public void StartHelper()
+    {
         menu.SetActive(true);
 
         left.interactable = true;
@@ -83,11 +88,7 @@ public class PlayerSelector : MonoBehaviour
     void OnRoom(IRoom other)
     {
         // reset state
-        menu.SetActive(true);
-        left.interactable = true;
-        right.interactable = true;
-        left.enabled = true;
-        right.enabled = true;
+        StartHelper();
 
         // send message to request the state of the obj from other players
         context.SendJson(new Message(true, left.enabled, right.enabled));

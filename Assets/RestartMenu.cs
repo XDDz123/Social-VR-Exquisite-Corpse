@@ -104,16 +104,17 @@ public class RestartMenu : MonoBehaviour
     {
         GameObject GO = GameObject.Find("Board");
         DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.Start();
+        canvas.StartHelper();
 
         GameObject TimerGO = GameObject.Find("Timer");
         Timer timer = TimerGO.GetComponent<Timer>();
         timer.Start();
 
+        // might become null when obj set to inactive
         if (PS != null)
         {
             PlayerSelector ps = PS.GetComponent<PlayerSelector>();
-            ps.Start();
+            ps.StartHelper();
         }
     }
 

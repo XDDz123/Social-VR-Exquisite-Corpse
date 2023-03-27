@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.17593624, g: 0.22017018, b: 0.3024987, a: 1}
+  m_IndirectSpecularColor: {r: 0.17593583, g: 0.22016943, b: 0.3024974, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -566,6 +566,7 @@ MonoBehaviour:
   PenPosition: {x: 0, y: 0, z: 0}
   PenDirection: {x: 0, y: 0, z: 0}
   drawing: 0
+  restart: {fileID: 1349531516856097282}
 --- !u!64 &283844485
 MeshCollider:
   m_ObjectHideFlags: 0
