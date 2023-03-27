@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class ControlPanel : MonoBehaviour
@@ -25,9 +27,13 @@ public class ControlPanel : MonoBehaviour
     private Button[] _palette;
     private int _oldestColor = 0;
 
-    private DrawableSurface _surface;
-    private LaserPointer _laser_pointer;
-    private Laser _laser;
+    [Serializable]
+    public class ColorChangedEvent : UnityEvent<Color> {}
+    public ColorChangedEvent onColorChanged = new ColorChangedEvent();
+
+    [Serializable]
+    public class SizeChangedEvent : UnityEvent<float> {}
+    public SizeChangedEvent onSizeChanged = new SizeChangedEvent();
 
     public Color color
     {
@@ -53,10 +59,6 @@ public class ControlPanel : MonoBehaviour
         SetupHistory();
         SetupBrushSize();
 
-        _surface = GameObject.Find("Board")?.GetComponent<DrawableSurface>();
-        _laser_pointer = GameObject.Find("Laser Pointer")?.GetComponent<LaserPointer>();
-        _laser = GameObject.Find("Laser")?.GetComponent<Laser>();
-
         UpdateSliderBackground(hueSlider, GenerateTexture(Channel.Hue));
         UpdateColor();
     }
@@ -75,16 +77,12 @@ public class ControlPanel : MonoBehaviour
 
     public void UseBrush()
     {
-        _surface.brushColor = color;
-        _laser_pointer.color = color;
-        _laser.color = color;
+        onColorChanged?.Invoke(color);
     }
 
     public void UseEraser()
     {
-        _surface.brushColor = Color.white;
-        _laser_pointer.color = Color.white;
-        _laser.color = Color.white;
+        onColorChanged?.Invoke(Color.white);
     }
 
     private void SetupColorSlider(Slider slider)
@@ -96,9 +94,6 @@ public class ControlPanel : MonoBehaviour
         slider.onValueChanged.AddListener(delegate { UpdateColor(); });
         slider.minValue = 0;
         slider.maxValue = 1;
-
-        // set initial value to 0
-        slider.value = 0;
     }
 
     private void SetupHistory()
@@ -184,30 +179,11 @@ public class ControlPanel : MonoBehaviour
         UpdateSliderBackground(saturationSlider, GenerateTexture(Channel.Saturation));
         UpdateSliderBackground(valueSlider, GenerateTexture(Channel.Value));
 
-        if (_surface != null) {
-            _surface.brushColor = color;
-        }
-
-        if (_laser_pointer != null)
-        {
-            _laser_pointer.color = color;
-        }
-
-        if (_laser != null)
-        {
-            _laser.color = color;
-        }
+        onColorChanged?.Invoke(color);
     }
 
     private void UpdateBrushSize()
     {
-        if (_surface != null) {
-            _surface.brushSize = 0.01f * brushSizeSlider.value;
-        }
-
-        if (_laser_pointer != null)
-        {
-            _laser_pointer.scale = brushSizeSlider.value;
-        }
+        onSizeChanged?.Invoke(brushSizeSlider.value);
     }
 }

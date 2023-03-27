@@ -11,15 +11,15 @@ public class DrawableSurface : MonoBehaviour
     private NetworkContext context;
 
     private Material _material;
-    private Camera _camera;
     private RenderTexture _texture;
-    public Color brushColor;
-    private Vector2? _lastPosition;
 
     private Material _material_full;
     private RenderTexture _texture_full;
 
-    public float brushSize = 0.01f;
+    private Vector2? _lastPosition;
+    private Color _brushColor = Color.black;
+    private float _brushSize = 0.01f;
+
     public int player_count = 2;
     public float timer = 10;
     public int player_remaining;
@@ -90,30 +90,29 @@ public class DrawableSurface : MonoBehaviour
         Graphics.SetRenderTarget(_texture);
         GL.Clear(false, true, Color.white);
 
+        Vector2 textureScale = new Vector2(transform.localScale.x, transform.localScale.z);
+
         _material = new Material(Shader.Find("DrawableSurface"));
-        _material.SetTexture("_MainTex", _texture);
+        _material.mainTexture = _texture;
+        _material.mainTextureScale = textureScale;
 
-        brushColor = Color.black;
-
-        GetComponent<Renderer>().material.mainTexture = _texture;
+        GetComponent<Renderer>().material = _material;
 
         if ((GetComponent<Collider>() as MeshCollider) == null)
         {
             gameObject.AddComponent<MeshCollider>();
         }
 
-        // set object to render with shader
-        GetComponent<Renderer>().material.shader = Shader.Find("DrawableSurface");
-
         player_remaining = player_count;
 
-
-        _texture_full = new RenderTexture(1024, 1024, 24);
+        _texture_full = new RenderTexture(_texture.width, _texture.height, 24);
         _texture_full.filterMode = FilterMode.Point;
         _texture_full.enableRandomWrite = true;
         _texture_full.Create();
+
         _material_full = new Material(Shader.Find("DrawableSurface"));
-        _material_full.SetTexture("_MainTex", _texture_full);
+        _material_full.mainTexture = _texture_full;
+        _material_full.mainTextureScale = textureScale;
 
         Graphics.SetRenderTarget(_texture_full);
         GL.Clear(false, true, Color.white);
@@ -153,14 +152,14 @@ public class DrawableSurface : MonoBehaviour
 
                 Vector2 temp = new Vector2(0, 0);
                 // send the entire drawing when requesting state on join
-                context.SendJson(new Message(1, temp, temp, brushColor, 0f, 0, curr_players));
+                context.SendJson(new Message(1, temp, temp, _brushColor, 0f, 0, curr_players));
             }
         }
         else if (data.flag == 1)
         {
             //Debug.Log(data.players.Count);
             // if the current player is not participating
-            // then update their canvas with the received texture 
+            // then update their canvas with the received texture
             if (!data.players.Contains(me))
             {
                 byte[] imgData;
@@ -215,6 +214,15 @@ public class DrawableSurface : MonoBehaviour
         }
     }
 
+    public void UpdateColor(Color color)
+    {
+        _brushColor = color;
+    }
+
+    public void UpdateBrushSize(float size)
+    {
+        _brushSize = 0.01f * size;
+    }
 
     void LateUpdate()
     {
@@ -249,16 +257,25 @@ public class DrawableSurface : MonoBehaviour
                         player_remaining -= 1;
 
                         // dummy vars sent as message, conditioned in ProcessMessage to update only player_remaining
-                        context.SendJson(new Message(2, new Vector2(0,0), new Vector2(0, 0), brushColor, brushSize, player_remaining, curr_players));
+                        context.SendJson(new Message(2, new Vector2(0,0), new Vector2(0, 0),
+                                         _brushColor, _brushSize, player_remaining, curr_players));
                     }
                 }
 
 
-                if (drawing)
+                if (drawing || Input.GetMouseButton(0))
                 {
                     RaycastHit hit;
+                    bool rayHit = false;
 
-                    if (!Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f))
+                    if (drawing) {
+                        rayHit = Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f);
+                    } else {
+                        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                        rayHit = Physics.Raycast(ray, out hit, 100.0f);
+                    }
+
+                    if (!rayHit)
                     {
                         // reset _lastPosition whenever raycasting no longer hits the object
                         // i.e. draw line should no longer connect when moving the cursor out of the canvas area
@@ -293,6 +310,8 @@ public class DrawableSurface : MonoBehaviour
                         return;
                     }
 
+                    Vector2 end = hit.textureCoord;
+
                     if (_lastPosition is Vector2 start)
                     {
                         if (drawable_side == -1)
@@ -304,7 +323,7 @@ public class DrawableSurface : MonoBehaviour
                         player_idx = drawable_side;
 
                         // limit which side the player can draw on
-                        if (hit.textureCoord.x > 1.0f / player_count * player_idx || hit.textureCoord.x < 1.0f / player_count * (player_idx - 1.0f))
+                        if (end.x > 1.0f / player_count * player_idx || end.x < 1.0f / player_count * (player_idx - 1.0f))
                         {
                             _lastPosition = null;
                             return;
@@ -322,13 +341,14 @@ public class DrawableSurface : MonoBehaviour
                             }
                         }
 
-                        context.SendJson(new Message(2, start, hit.textureCoord, brushColor, brushSize, player_remaining, curr_players));
+                        context.SendJson(new Message(2, start, end, _brushColor, _brushSize,
+                                                     player_remaining, curr_players));
 
-                        DrawOnCanvas(_material, _texture, start, hit.textureCoord, brushColor, brushSize);
-                        DrawOnCanvas(_material_full, _texture_full, start, hit.textureCoord, brushColor, brushSize);
+                        DrawOnCanvas(_material, _texture, start, end, _brushColor, _brushSize);
+                        DrawOnCanvas(_material_full, _texture_full, start, end, _brushColor, _brushSize);
                     }
 
-                    _lastPosition = hit.textureCoord;
+                    _lastPosition = end;
                 }
                 else
                 {
@@ -355,19 +375,25 @@ public class DrawableSurface : MonoBehaviour
         drawable_side = s;
     }
 
-    void DrawOnCanvas(Material _material, RenderTexture _texture, Vector2 start, Vector2 end, Color brushColor, float brushSize)
+    void DrawOnCanvas(Material material, RenderTexture texture, Vector2 start, Vector2 end, Color brushColor, float brushSize)
     {
         Graphics.SetRenderTarget(_texture);
 
-        _material.SetVector("_Start", start);
-        _material.SetVector("_End", end);
-        _material.SetColor("_Color", brushColor);
-        _material.SetFloat("_BrushSize", brushSize);
+        float aspectRatio = material.mainTextureScale.x / material.mainTextureScale.y;
 
-        RenderTexture tmp = RenderTexture.GetTemporary(_texture.width, _texture.height);
+        brushSize /= aspectRatio;
+        start *= material.mainTextureScale;
+        end *= material.mainTextureScale;
 
-        Graphics.Blit(_texture, tmp);
-        Graphics.Blit(tmp, _texture, _material);
+        material.SetVector("_Start", start);
+        material.SetVector("_End", end);
+        material.SetColor("_Color", brushColor);
+        material.SetFloat("_BrushSize", brushSize);
+
+        RenderTexture tmp = RenderTexture.GetTemporary(texture.width, texture.height);
+
+        Graphics.Blit(texture, tmp);
+        Graphics.Blit(tmp, texture, material);
 
         RenderTexture.ReleaseTemporary(tmp);
     }
@@ -381,6 +407,6 @@ public class DrawableSurface : MonoBehaviour
     {
         // request info when joining room
         Vector2 temp = new Vector2(0, 0);
-        context.SendJson(new Message(0, temp, temp, brushColor, 0f, 0, curr_players));
+        context.SendJson(new Message(0, temp, temp, _brushColor, 0f, 0, curr_players));
     }
 }

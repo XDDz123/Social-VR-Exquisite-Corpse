@@ -4,31 +4,34 @@ using UnityEngine;
 
 public class LaserPointer : MonoBehaviour
 {
-    private Vector3 offset;
-    private Renderer rend;
-    public Color color;
-    public float scale;
+    private Vector3 _offset = new Vector3(0.0f, 0.0f, -0.001f);
+    private Color _color = Color.black;
+    private float _scale = 1;
     public Vector3 PenPosition;
     public Vector3 PenDirection;
 
-    // Start is called before the first frame update
+    public void UpdateColor(Color color)
+    {
+        _color = color;
+    }
+
+    public void UpdateScale(float size)
+    {
+        _scale = size;
+    }
+
     void Start()
     {
-        scale = 1;
-        color = Color.black;
-        offset = new Vector3(0f, 0f, -0.001f);
         GetComponent<Renderer>().enabled = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
         // change sprite color
-        rend = GetComponent<Renderer>();
-        rend.material.color = color;
-        // change sprite size
-        this.transform.localScale = new Vector3(0.009f * scale * 0.95f, 0.009f * scale * 0.95f, 1.0f);
+        GetComponent<Renderer>().material.color = _color;
 
+        // change sprite size
+        transform.localScale = new Vector3(0.009f * _scale * 0.95f, 0.009f * _scale * 0.95f, 1.0f);
 
         RaycastHit hit;
 
@@ -36,7 +39,7 @@ public class LaserPointer : MonoBehaviour
         {
 
             MeshCollider meshCollider = hit.collider as MeshCollider;
-
+ 
             if (meshCollider == null)
             {
                 GetComponent<Renderer>().enabled = false;
@@ -65,7 +68,7 @@ public class LaserPointer : MonoBehaviour
             }
 
             GetComponent<Renderer>().enabled = true;
-            transform.position = hit.point + offset;
+            transform.position = hit.point + _offset;
 
         }
         else

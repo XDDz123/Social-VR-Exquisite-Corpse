@@ -37,15 +37,15 @@ Shader "DrawableSurface"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(vertex);
-                o.uv = uv;
+                o.uv = TRANSFORM_TEX(uv, _MainTex);
 
                 return o;
             }
 
             float4 frag(v2f IN) : SV_TARGET
             {
-                const float4 texel = tex2D(_MainTex, IN.uv);
-
+                float2 uv = IN.uv;
+                const float4 texel = tex2D(_MainTex, uv);
                 float dist = 0;
 
                 // We can find the distance of our uv coordinates from the line using the following:
@@ -57,16 +57,16 @@ Shader "DrawableSurface"
                 // projection of the UV coordinate onto the line does not lie between the two
                 // points. As such, we're only interested in the distance from the UV coordinate to
                 // the respective end point.
-                if (dot(_Start - _End, IN.uv - _Start) > 0) {
-                    dist = distance(_Start, IN.uv);
-                } else if (dot(_End - _Start, IN.uv - _End) > 0) {
-                    dist = distance(_End, IN.uv);
+                if (dot(_Start - _End, uv - _Start) > 0) {
+                    dist = distance(_Start, uv);
+                } else if (dot(_End - _Start, uv - _End) > 0) {
+                    dist = distance(_End, uv);
                 } else {
                     float2 dir = _End - _Start;
                     float2 perp = float2(dir.y, -dir.x);
                     perp = perp / length(perp);
 
-                    dist = abs(dot(perp, _Start - IN.uv));
+                    dist = abs(dot(perp, _Start - uv));
                 }
 
                 if (dist < _BrushSize) {
