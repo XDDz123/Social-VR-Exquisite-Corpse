@@ -5,10 +5,15 @@ using UnityEngine;
 public class LaserPointer : MonoBehaviour
 {
     private Vector3 offset;
+    private Renderer rend;
+    public Color color;
+    public float scale;
 
     // Start is called before the first frame update
     void Start()
     {
+        scale = 1;
+        color = Color.black;
         offset = new Vector3(0f, 0f, -0.001f);
         GetComponent<Renderer>().enabled = false;
     }
@@ -16,6 +21,13 @@ public class LaserPointer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // change sprite color
+        rend = GetComponent<Renderer>();
+        rend.material.color = color;
+        // change sprite size
+        this.transform.localScale = new Vector3(0.009f * scale * 0.95f, 0.009f * scale * 0.95f, 1.0f);
+
+
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 

@@ -26,6 +26,7 @@ public class ControlPanel : MonoBehaviour
     private int _oldestColor = 0;
 
     private DrawableSurface _surface;
+    private LaserPointer _laser_pointer;
 
     public Color color
     {
@@ -52,6 +53,7 @@ public class ControlPanel : MonoBehaviour
         SetupBrushSize();
 
         _surface = GameObject.Find("Board")?.GetComponent<DrawableSurface>();
+        _laser_pointer = GameObject.Find("Laser Pointer")?.GetComponent<LaserPointer>();
 
         UpdateSliderBackground(hueSlider, GenerateTexture(Channel.Hue));
         UpdateColor();
@@ -72,11 +74,13 @@ public class ControlPanel : MonoBehaviour
     public void UseBrush()
     {
         _surface.brushColor = color;
+        _laser_pointer.color = color;
     }
 
     public void UseEraser()
     {
         _surface.brushColor = Color.white;
+        _laser_pointer.color = Color.white;
     }
 
     private void SetupColorSlider(Slider slider)
@@ -88,6 +92,9 @@ public class ControlPanel : MonoBehaviour
         slider.onValueChanged.AddListener(delegate { UpdateColor(); });
         slider.minValue = 0;
         slider.maxValue = 1;
+
+        // set initial value to 0
+        slider.value = 0;
     }
 
     private void SetupHistory()
@@ -176,12 +183,22 @@ public class ControlPanel : MonoBehaviour
         if (_surface != null) {
             _surface.brushColor = color;
         }
+
+        if (_laser_pointer != null)
+        {
+            _laser_pointer.color = color;
+        }
     }
 
     private void UpdateBrushSize()
     {
         if (_surface != null) {
             _surface.brushSize = 0.01f * brushSizeSlider.value;
+        }
+
+        if (_laser_pointer != null)
+        {
+            _laser_pointer.scale = brushSizeSlider.value;
         }
     }
 }
