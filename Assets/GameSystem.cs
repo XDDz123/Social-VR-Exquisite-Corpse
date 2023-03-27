@@ -1,11 +1,14 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Collections;
+using System;
+using Ubiq.Messaging;
 using UnityEngine.Events;
+using UnityEngine;
 
 public class GameSystem : MonoBehaviour
 {
+    private NetworkContext _context;
+
     public enum State
     {
         Prepare,
@@ -25,6 +28,12 @@ public class GameSystem : MonoBehaviour
     public class TimerChangedEvent : UnityEvent<float> {}
     public TimerChangedEvent onTimerChanged = new TimerChangedEvent();
 
+    [Serializable]
+    private struct Message
+    {
+        public State state;
+    }
+
     public void ResetGame()
     {
         SwitchState(State.Prepare);
@@ -35,6 +44,13 @@ public class GameSystem : MonoBehaviour
         SwitchState(State.InProgress);
     }
 
+    public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
+    {
+        var args = JsonUtility.FromJson<Message>(msg.ToString());
+
+        SwitchState(args.state);
+    }
+
     public void UpdateGameLength(float length)
     {
         _gameLength = length;
@@ -42,6 +58,7 @@ public class GameSystem : MonoBehaviour
 
     void Start()
     {
+        _context = NetworkScene.Register(this);
         onGameStateChanged?.Invoke(_state);
     }
 
@@ -74,6 +91,7 @@ public class GameSystem : MonoBehaviour
         }
 
         _state = state;
+        _context.SendJson(new Message() { state = _state });
         onGameStateChanged?.Invoke(state);
     }
 }
