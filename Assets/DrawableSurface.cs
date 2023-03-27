@@ -30,7 +30,9 @@ public class DrawableSurface : MonoBehaviour
 
     private Texture2D _localTexture;
 
-    public int playerCount = 1;
+    public int playerCount = 2;
+
+    // TODO: clean this up
     public Vector3 PenPosition;
     public Vector3 PenDirection;
     public bool drawing;
