@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Ubiq.Messaging;
-using System.IO;
-using System.Text;
+using Ubiq.Rooms;
+using System;
+using UnityEditor;
 
 public class DrawableSurface : MonoBehaviour
 {
@@ -22,10 +23,10 @@ public class DrawableSurface : MonoBehaviour
     public int player_count = 2;
     public float timer = 10;
     public int player_remaining;
-    private bool curr_player_done = false;
+    private bool curr_player_done;
     public float time_remaining;
-    public bool count_down_start = false;
-    private bool game_end = false;
+    public bool count_down_start;
+    private bool game_end;
 
     private Vector2 remote_start;
     private Vector2 remote_end;
@@ -34,8 +35,11 @@ public class DrawableSurface : MonoBehaviour
 
     private NetworkId me;
     private int player_idx;
+    private List<NetworkId> curr_players;
 
-    private int drawable_side = -1;
+    private int drawable_side;
+
+    private Texture2D local_tex;
 
     private struct Message
     {
@@ -44,14 +48,18 @@ public class DrawableSurface : MonoBehaviour
         public Color ms_color;
         public float ms_brush_size;
         public int ms_player_remaining;
+        public int flag;
+        public List<NetworkId> players;
 
-        public Message(Vector2 start, Vector2 end, Color color, float brushSize, int player_remaining)
+        public Message(int flag, Vector2 start, Vector2 end, Color color, float brushSize, int player_remaining, List<NetworkId> players)
         {
+            this.flag = flag;
             this.ms_start = start;
             this.ms_end = end;
             this.ms_color = color;
             this.ms_brush_size = brushSize;
             this.ms_player_remaining = player_remaining;
+            this.players = players;
         }
     }
 
@@ -59,6 +67,15 @@ public class DrawableSurface : MonoBehaviour
     {
         context = NetworkScene.Register(this);
         me = context.Scene.Id;
+
+        local_tex = new Texture2D(1024, 1024);
+
+        curr_players = new List<NetworkId>();
+
+        drawable_side = -1;
+        curr_player_done = false;
+        count_down_start = false;
+        game_end = false;
 
         // Create the texture that will be drawn on
         _texture = new RenderTexture(1024, 1024, 24);
@@ -100,30 +117,98 @@ public class DrawableSurface : MonoBehaviour
 
         Graphics.SetRenderTarget(_texture);
         GL.Clear(false, true, Color.white);
+
+        RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
     }
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
     {
         var data = msg.FromJson<Message>();
-        if (player_remaining == data.ms_player_remaining)
+
+        if (data.flag == 0)
         {
-            remote_start = data.ms_start;
-            remote_end = data.ms_end;
-            remote_color = data.ms_color;
-            remote_brush_size = data.ms_brush_size;
-
-            float idx_start = 0.45f;
-            float idx_end = 0.55f;
-            if (remote_end.x > idx_start && remote_end.x < idx_end)
+            // if the current player is drawing on some side
+            // then send the current drawing over
+            if (curr_players.Contains(me))
             {
-                DrawOnCanvas(_material, _texture, remote_start, remote_end, remote_color, remote_brush_size);
-            }
+                // port render texture from gpu to rexture2d in cpu
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = _texture_full;
+                local_tex.ReadPixels(new Rect(0, 0, _texture.width, _texture.height), 0, 0);
+                local_tex.Apply();
+                RenderTexture.active = prev;
 
-            DrawOnCanvas(_material_full, _texture_full, remote_start, remote_end, remote_color, remote_brush_size);
+                // save the current drawing as png
+                // https://answers.unity.com/questions/1331297/how-to-save-a-texture2d-into-a-png.html
+                byte[] bytes = local_tex.EncodeToPNG();
+                var dirPath = Application.dataPath + "/../TempImages/";
+                if (!System.IO.Directory.Exists(dirPath))
+                {
+                    System.IO.Directory.CreateDirectory(dirPath);
+                }
+                System.IO.File.WriteAllBytes(dirPath + "image" + ".png", bytes);
+
+                Vector2 temp = new Vector2(0, 0);
+                // send the entire drawing when requesting state on join
+                context.SendJson(new Message(1, temp, temp, brushColor, 0f, 0, curr_players));
+            }
+        }
+        else if (data.flag == 1)
+        {
+            //Debug.Log(data.players.Count);
+            // if the current player is not participating
+            // then update their canvas with the received texture 
+            if (!data.players.Contains(me))
+            {
+                byte[] imgData;
+                string path = Application.dataPath + "/../TempImages/image.png";
+
+                // load saved temp image as texture
+                if (System.IO.File.Exists(path))
+                {
+                    imgData = System.IO.File.ReadAllBytes(path);
+                    local_tex.LoadImage(imgData);
+                    Graphics.Blit(local_tex, _texture_full);
+                }
+
+                // display both full canvas when spectating
+                if (data.players.Count == 2)
+                {
+                    Graphics.SetRenderTarget(_texture_full);
+                    GetComponent<Renderer>().material.mainTexture = _texture_full;
+                }
+            }
         }
         else
         {
-            player_remaining = data.ms_player_remaining;
+            if (player_remaining == data.ms_player_remaining)
+            {
+                remote_start = data.ms_start;
+                remote_end = data.ms_end;
+                remote_color = data.ms_color;
+                remote_brush_size = data.ms_brush_size;
+
+                foreach (NetworkId i in data.players)
+                {
+                    if (!curr_players.Contains(i))
+                    {
+                        curr_players.Add(i);
+                    }
+                }
+
+                float idx_start = 0.45f;
+                float idx_end = 0.55f;
+                if (remote_end.x > idx_start && remote_end.x < idx_end)
+                {
+                    DrawOnCanvas(_material, _texture, remote_start, remote_end, remote_color, remote_brush_size);
+                }
+
+                DrawOnCanvas(_material_full, _texture_full, remote_start, remote_end, remote_color, remote_brush_size);
+            }
+            else
+            {
+                player_remaining = data.ms_player_remaining;
+            }
         }
     }
 
@@ -160,9 +245,10 @@ public class DrawableSurface : MonoBehaviour
                         player_remaining -= 1;
 
                         // dummy vars sent as message, conditioned in ProcessMessage to update only player_remaining
-                        context.SendJson(new Message(new Vector2(0,0), new Vector2(0, 0), brushColor, brushSize, player_remaining));
+                        context.SendJson(new Message(2, new Vector2(0,0), new Vector2(0, 0), brushColor, brushSize, player_remaining, curr_players));
                     }
                 }
+
 
                 if (Input.GetMouseButton(0))
                 {
@@ -216,6 +302,10 @@ public class DrawableSurface : MonoBehaviour
                         if (!count_down_start)
                         {
                             count_down_start = true;
+                            if (!curr_players.Contains(me))
+                            {
+                                curr_players.Add(me);
+                            }
                         }
 
                         player_idx = drawable_side;
@@ -227,7 +317,7 @@ public class DrawableSurface : MonoBehaviour
                             return;
                         }
 
-                        context.SendJson(new Message(start, hit.textureCoord, brushColor, brushSize, player_remaining));
+                        context.SendJson(new Message(2, start, hit.textureCoord, brushColor, brushSize, player_remaining, curr_players));
 
                         DrawOnCanvas(_material, _texture, start, hit.textureCoord, brushColor, brushSize);
                         DrawOnCanvas(_material_full, _texture_full, start, hit.textureCoord, brushColor, brushSize);
@@ -280,5 +370,12 @@ public class DrawableSurface : MonoBehaviour
     void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
         Graphics.Blit(_texture, dest);
+    }
+
+    void OnRoom(IRoom other)
+    {
+        // request info when joining room
+        Vector2 temp = new Vector2(0, 0);
+        context.SendJson(new Message(0, temp, temp, brushColor, 0f, 0, curr_players));
     }
 }
