@@ -27,6 +27,7 @@ public class ControlPanel : MonoBehaviour
 
     private DrawableSurface _surface;
     private LaserPointer _laser_pointer;
+    private Laser _laser;
 
     public Color color
     {
@@ -54,6 +55,7 @@ public class ControlPanel : MonoBehaviour
 
         _surface = GameObject.Find("Board")?.GetComponent<DrawableSurface>();
         _laser_pointer = GameObject.Find("Laser Pointer")?.GetComponent<LaserPointer>();
+        _laser = GameObject.Find("Laser")?.GetComponent<Laser>();
 
         UpdateSliderBackground(hueSlider, GenerateTexture(Channel.Hue));
         UpdateColor();
@@ -75,12 +77,14 @@ public class ControlPanel : MonoBehaviour
     {
         _surface.brushColor = color;
         _laser_pointer.color = color;
+        _laser.color = color;
     }
 
     public void UseEraser()
     {
         _surface.brushColor = Color.white;
         _laser_pointer.color = Color.white;
+        _laser.color = Color.white;
     }
 
     private void SetupColorSlider(Slider slider)
@@ -187,6 +191,11 @@ public class ControlPanel : MonoBehaviour
         if (_laser_pointer != null)
         {
             _laser_pointer.color = color;
+        }
+
+        if (_laser != null)
+        {
+            _laser.color = color;
         }
     }
 

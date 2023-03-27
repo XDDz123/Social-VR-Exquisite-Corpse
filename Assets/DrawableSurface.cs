@@ -41,6 +41,10 @@ public class DrawableSurface : MonoBehaviour
 
     private Texture2D local_tex;
 
+    public Vector3 PenPosition;
+    public Vector3 PenDirection;
+    public bool drawing;
+
     private struct Message
     {
         public Vector2 ms_start;
@@ -250,12 +254,11 @@ public class DrawableSurface : MonoBehaviour
                 }
 
 
-                if (Input.GetMouseButton(0))
+                if (drawing)
                 {
                     RaycastHit hit;
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-                    if (!Physics.Raycast(ray, out hit, 100.0f))
+                    if (!Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f))
                     {
                         // reset _lastPosition whenever raycasting no longer hits the object
                         // i.e. draw line should no longer connect when moving the cursor out of the canvas area

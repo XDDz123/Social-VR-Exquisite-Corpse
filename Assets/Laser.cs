@@ -1,34 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Ubiq.XR;
 
-public class LaserPointer : MonoBehaviour
+public class Laser : MonoBehaviour
 {
-    private Vector3 offset;
-    private Renderer rend;
+    private LineRenderer laser;
+    private Hand controller;
     public Color color;
-    public float scale;
     public Vector3 PenPosition;
     public Vector3 PenDirection;
 
     // Start is called before the first frame update
     void Start()
     {
-        scale = 1;
         color = Color.black;
-        offset = new Vector3(0f, 0f, -0.001f);
-        GetComponent<Renderer>().enabled = false;
+        laser = GetComponent<LineRenderer>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        // change sprite color
-        rend = GetComponent<Renderer>();
-        rend.material.color = color;
-        // change sprite size
-        this.transform.localScale = new Vector3(0.009f * scale * 0.95f, 0.009f * scale * 0.95f, 1.0f);
-
 
         RaycastHit hit;
 
@@ -64,8 +56,12 @@ public class LaserPointer : MonoBehaviour
                 return;
             }
 
+            laser.startColor = color;
+            laser.endColor = color;
+            laser.SetPosition(0, PenPosition);
+            laser.SetPosition(1, hit.point);
+
             GetComponent<Renderer>().enabled = true;
-            transform.position = hit.point + offset;
 
         }
         else
@@ -73,5 +69,4 @@ public class LaserPointer : MonoBehaviour
             GetComponent<Renderer>().enabled = false;
         }
     }
-
 }
