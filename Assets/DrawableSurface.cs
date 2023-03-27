@@ -17,9 +17,8 @@ public class DrawableSurface : MonoBehaviour
     private RenderTexture _texture_full;
 
     private Vector2? _lastPosition;
-
-    public Color brushColor = Color.black;
-    public float brushSize = 0.01f;
+    private Color _brushColor = Color.black;
+    private float _brushSize = 0.01f;
 
     public int player_count = 2;
     public float timer = 10;
@@ -153,14 +152,14 @@ public class DrawableSurface : MonoBehaviour
 
                 Vector2 temp = new Vector2(0, 0);
                 // send the entire drawing when requesting state on join
-                context.SendJson(new Message(1, temp, temp, brushColor, 0f, 0, curr_players));
+                context.SendJson(new Message(1, temp, temp, _brushColor, 0f, 0, curr_players));
             }
         }
         else if (data.flag == 1)
         {
             //Debug.Log(data.players.Count);
             // if the current player is not participating
-            // then update their canvas with the received texture 
+            // then update their canvas with the received texture
             if (!data.players.Contains(me))
             {
                 byte[] imgData;
@@ -215,6 +214,15 @@ public class DrawableSurface : MonoBehaviour
         }
     }
 
+    public void UpdateColor(Color color)
+    {
+        _brushColor = color;
+    }
+
+    public void UpdateBrushSize(float size)
+    {
+        _brushSize = 0.01f * size;
+    }
 
     void LateUpdate()
     {
@@ -249,7 +257,8 @@ public class DrawableSurface : MonoBehaviour
                         player_remaining -= 1;
 
                         // dummy vars sent as message, conditioned in ProcessMessage to update only player_remaining
-                        context.SendJson(new Message(2, new Vector2(0,0), new Vector2(0, 0), brushColor, brushSize, player_remaining, curr_players));
+                        context.SendJson(new Message(2, new Vector2(0,0), new Vector2(0, 0),
+                                         _brushColor, _brushSize, player_remaining, curr_players));
                     }
                 }
 
@@ -324,10 +333,11 @@ public class DrawableSurface : MonoBehaviour
                             }
                         }
 
-                        context.SendJson(new Message(2, start, end, brushColor, brushSize, player_remaining, curr_players));
+                        context.SendJson(new Message(2, start, end, _brushColor, _brushSize,
+                                                     player_remaining, curr_players));
 
-                        DrawOnCanvas(_material, _texture, start, end, brushColor, brushSize);
-                        DrawOnCanvas(_material_full, _texture_full, start, end, brushColor, brushSize);
+                        DrawOnCanvas(_material, _texture, start, end, _brushColor, _brushSize);
+                        DrawOnCanvas(_material_full, _texture_full, start, end, _brushColor, _brushSize);
                     }
 
                     _lastPosition = end;
@@ -389,6 +399,6 @@ public class DrawableSurface : MonoBehaviour
     {
         // request info when joining room
         Vector2 temp = new Vector2(0, 0);
-        context.SendJson(new Message(0, temp, temp, brushColor, 0f, 0, curr_players));
+        context.SendJson(new Message(0, temp, temp, _brushColor, 0f, 0, curr_players));
     }
 }
