@@ -13,6 +13,8 @@ public class RestartMenu : MonoBehaviour
     public Slider time;
     private bool updating;
     public GameObject PS;
+    public Button pen_tp;
+    public GameObject pen;
 
     private struct Message
     {
@@ -69,6 +71,7 @@ public class RestartMenu : MonoBehaviour
     {
         context = NetworkScene.Register(this);
         button.onClick.AddListener(ResetListener);
+        pen_tp.onClick.AddListener(PenListener);
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
 
         time.onValueChanged.AddListener(delegate { TimerListener(); });
@@ -128,5 +131,11 @@ public class RestartMenu : MonoBehaviour
     void OnRoom(IRoom other)
     {
         context.SendJson(new Message(true, true, 0));
+    }
+
+    public void PenListener()
+    {
+        Pen pen_obj = pen.GetComponent<Pen>();
+        pen_obj.ResetPosition();
     }
 }

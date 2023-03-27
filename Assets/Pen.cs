@@ -57,4 +57,9 @@ public class Pen : MonoBehaviour, IGraspable, IUseable
     {
         ds.drawing = false;
     }
+
+    public void ResetPosition()
+    {
+        transform.position = new Vector3(-3.25f, 1f, 1.2f);
+    }
 }
