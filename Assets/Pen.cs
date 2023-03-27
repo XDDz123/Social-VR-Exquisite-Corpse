@@ -61,5 +61,13 @@ public class Pen : MonoBehaviour, IGraspable, IUseable
     public void ResetPosition()
     {
         transform.position = new Vector3(-3.25f, 1f, 1.2f);
+
+        Laser ls = _laser.GetComponent<Laser>();
+        ls.PenPosition = _nib.position;
+        ls.PenDirection = _nib.TransformDirection(Vector3.forward);
+
+        LaserPointer lp = _laser_pointer.GetComponent<LaserPointer>();
+        lp.PenPosition = _nib.position;
+        lp.PenDirection = _nib.TransformDirection(Vector3.forward);
     }
 }
