@@ -10,8 +10,6 @@ public class RestartMenu : MonoBehaviour
 {
     private NetworkContext context;
     public Button button;
-    public GameObject left;
-    public GameObject right;
     public Slider time;
     private bool updating;
     public GameObject PS;
@@ -102,16 +100,10 @@ public class RestartMenu : MonoBehaviour
         Timer timer = TimerGO.GetComponent<Timer>();
         timer.Start();
 
-        if (left != null)
+        if (PS != null)
         {
-            PSButton btn_left = left.GetComponent<PSButton>();
-            btn_left.Start();
-        }
-
-        if (right != null)
-        {
-            PSButton btn_right = right.GetComponent<PSButton>();
-            btn_right.Start();
+            PlayerSelector ps = PS.GetComponent<PlayerSelector>();
+            ps.Start();
         }
     }
 

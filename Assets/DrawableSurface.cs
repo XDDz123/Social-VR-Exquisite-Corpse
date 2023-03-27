@@ -23,7 +23,7 @@ public class DrawableSurface : MonoBehaviour
     public int player_count = 2;
     public float timer = 10;
     public int player_remaining;
-    private bool curr_player_done;
+    public bool curr_player_done;
     public float time_remaining;
     public bool count_down_start;
     private bool game_end;
