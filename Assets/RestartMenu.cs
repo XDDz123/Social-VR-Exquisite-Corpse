@@ -10,14 +10,20 @@ using Ubiq.Rooms;
 
 public class RestartMenu : MonoBehaviour
 {
+    private NetworkContext _context;
+
     public Slider gameLengthSlider;
     public GameObject PS;
     public Button pen_tp;
     public GameObject pen;
 
-    [Serializable]
-    public class GameLengthChangedEvent : UnityEvent<float> {}
-    public GameLengthChangedEvent onGameLengthChanged = new GameLengthChangedEvent();
+    private bool _silent = false;
+
+    public struct Message
+    {
+        public bool request;
+        public float gameLength;
+    };
 
     public void OnGameStateChanged(GameSystem.State state)
     {
@@ -35,13 +41,30 @@ public class RestartMenu : MonoBehaviour
         }
     }
 
-    public void OnGameLengthChanged(float time)
+    public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
     {
-        gameLengthSlider.value = time;
+        var args = JsonUtility.FromJson<Message>(msg.ToString());
+
+        if (args.request)
+        {
+            SendUpdate();
+        }
+        else
+        {
+            if (gameLengthSlider.value != args.gameLength) {
+                _silent = true;
+                gameLengthSlider.value = args.gameLength;
+                _silent = false;
+            }
+        }
     }
 
     void Start()
     {
+        _context = NetworkScene.Register(this);
+        RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
+
+        gameLengthSlider.onValueChanged.AddListener(delegate { SendUpdate(); });
         pen_tp.onClick.AddListener(PenListener);
 
         gameLengthSlider.minValue = 10;
@@ -53,5 +76,27 @@ public class RestartMenu : MonoBehaviour
     {
         Pen pen_obj = pen.GetComponent<Pen>();
         pen_obj.ResetPosition();
+    }
+
+    private void OnRoom(IRoom other)
+    {
+        _context.SendJson(new Message()
+        {
+            request = true,
+            gameLength = gameLengthSlider.value,
+        });
+    }
+
+    private void SendUpdate()
+    {
+        if (_silent) {
+            return;
+        }
+
+        _context.SendJson(new Message()
+        {
+            request = false,
+            gameLength = gameLengthSlider.value,
+        });
     }
 }

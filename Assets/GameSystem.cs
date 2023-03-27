@@ -26,10 +26,6 @@ public class GameSystem : MonoBehaviour
     public GameStateChangedEvent onGameStateChanged = new GameStateChangedEvent();
 
     [Serializable]
-    public class GameLengthChangedEvent : UnityEvent<float> {};
-    public GameLengthChangedEvent onGameLengthChanged  = new GameLengthChangedEvent();
-
-    [Serializable]
     public class TimerChangedEvent : UnityEvent<float> {}
     public TimerChangedEvent onTimerChanged = new TimerChangedEvent();
 
@@ -61,15 +57,17 @@ public class GameSystem : MonoBehaviour
         }
         else
         {
-            SwitchState(args.state);
-
-            _gameLength = args.gameLength;
-            onGameLengthChanged?.Invoke(_gameLength);
+            SwitchState(args.state, silent: true);
+            UpdateGameLength(args.gameLength);
         }
     }
 
     public void UpdateGameLength(float length)
     {
+        if (_gameLength == length) {
+            return;
+        }
+
         _gameLength = length;
         SendUpdate();
     }
