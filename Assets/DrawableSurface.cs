@@ -63,7 +63,7 @@ public class DrawableSurface : MonoBehaviour
         }
     }
 
-    void Start()
+    public void Start()
     {
         context = NetworkScene.Register(this);
         me = context.Scene.Id;
@@ -101,7 +101,6 @@ public class DrawableSurface : MonoBehaviour
         // set object to render with shader
         GetComponent<Renderer>().material.shader = Shader.Find("DrawableSurface");
 
-        time_remaining = timer;
         player_remaining = player_count;
 
 
@@ -299,16 +298,6 @@ public class DrawableSurface : MonoBehaviour
                             return;
                         }
 
-                        // start the timer since we begin drawing here
-                        if (!count_down_start)
-                        {
-                            count_down_start = true;
-                            if (!curr_players.Contains(me))
-                            {
-                                curr_players.Add(me);
-                            }
-                        }
-
                         player_idx = drawable_side;
 
                         // limit which side the player can draw on
@@ -316,6 +305,18 @@ public class DrawableSurface : MonoBehaviour
                         {
                             _lastPosition = null;
                             return;
+                        }
+
+                        // start the timer since we begin drawing here
+                        if (!count_down_start)
+                        {
+                            count_down_start = true;
+                            time_remaining = timer;
+
+                            if (!curr_players.Contains(me))
+                            {
+                                curr_players.Add(me);
+                            }
                         }
 
                         context.SendJson(new Message(2, start, hit.textureCoord, brushColor, brushSize, player_remaining, curr_players));

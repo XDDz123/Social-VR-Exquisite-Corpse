@@ -8,11 +8,12 @@ public class Timer : MonoBehaviour
     private TextMesh textMesh;
     private DrawableSurface canvas;
 
-    private void Start()
+    public void Start()
     {
         textMesh = GetComponent<TextMesh>();
         GameObject go = GameObject.Find("Board");
         canvas = go.GetComponent<DrawableSurface>();
+        textMesh.text = "--:--";
     }
 
     void Update()

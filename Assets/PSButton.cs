@@ -13,14 +13,22 @@ public class PSButton : MonoBehaviour
     public Button OtherButton;
     public int side;
     private bool clicked = false;
+    public GameObject menu;
 
-    void Start()
+    public void Start()
     {
         context = NetworkScene.Register(this);
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
 
         Button btn = button.GetComponent<Button>();
         btn.onClick.AddListener(OnClick);
+
+        button.interactable = true;
+        OtherButton.interactable = true;
+        button.enabled = true;
+        OtherButton.enabled = true;
+
+        menu.SetActive(true);
     }
 
     void OnClick()
