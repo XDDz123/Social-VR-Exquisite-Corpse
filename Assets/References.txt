@@ -1,0 +1,3 @@
+brush.png: https://www.flaticon.com/free-icon/paint-brush_587377?term=brush&page=1&position=1&origin=search&related_id=587377
+eraser.png: https://www.flaticon.com/free-icon/eraser_483907?term=eraser&page=1&position=7&origin=search&related_id=483907
+
