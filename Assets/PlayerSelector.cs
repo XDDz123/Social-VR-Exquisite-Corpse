@@ -10,7 +10,7 @@ using Ubiq.Rooms;
 
 public class PlayerSelector : MonoBehaviour
 {
-    private NetworkContext context;
+    private NetworkContext _context;
 
     public Button left;
     public Button right;
@@ -18,16 +18,9 @@ public class PlayerSelector : MonoBehaviour
 
     private struct Message
     {
-        public bool flag;
+        public bool request;
         public bool left;
         public bool right;
-
-        public Message(bool flag, bool left, bool right)
-        {
-            this.flag = flag;
-            this.left = left;
-            this.right = right;
-        }
     }
 
     [Serializable]
@@ -50,7 +43,7 @@ public class PlayerSelector : MonoBehaviour
 
     public void Start()
     {
-        context = NetworkScene.Register(this);
+        _context = NetworkScene.Register(this);
 
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
         Reset();
@@ -63,7 +56,7 @@ public class PlayerSelector : MonoBehaviour
         right.enabled = false;
         left.interactable = false;
 
-        context.SendJson(new Message(false, left.interactable, right.interactable));
+        SendUpdate();
     }
 
     public void OnClickRight()
@@ -73,7 +66,7 @@ public class PlayerSelector : MonoBehaviour
         left.enabled = false;
         right.interactable = false;
 
-        context.SendJson(new Message(false, left.interactable, right.interactable));
+        SendUpdate();
     }
 
     void OnRoom(IRoom other)
@@ -81,17 +74,21 @@ public class PlayerSelector : MonoBehaviour
         Reset();
 
         // send message to request the state of the obj from other players
-        context.SendJson(new Message(true, left.enabled, right.enabled));
+        _context.SendJson(new Message()
+        {
+            request = true,
+            left = left.enabled,
+            right = right.enabled
+        });
     }
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
     {
         var data = msg.FromJson<Message>();
 
-        // flag for state request 
-        if (data.flag)
+        if (data.request)
         {
-            context.SendJson(new Message(false, left.interactable, right.interactable));
+            SendUpdate();
         }
         else
         {
@@ -107,7 +104,15 @@ public class PlayerSelector : MonoBehaviour
         right.interactable = true;
         left.enabled = true;
         right.enabled = true;
+    }
 
-        context.SendJson(new Message(false, left.interactable, right.interactable));
+    private void SendUpdate()
+    {
+        _context.SendJson(new Message()
+        {
+            request = false,
+            left = left.interactable,
+            right = right.interactable
+        });
     }
 }
