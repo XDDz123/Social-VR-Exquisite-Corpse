@@ -393,12 +393,7 @@ public class DrawableSurface : MonoBehaviour
 
     void OnRoom(IRoom other)
     {
-        // clear canvas when joining room
-        context.SendJson(new Message(new PlayerArgs()
-        {
-            request = true,
-            id = _me,
-        }));
+        Reset();
     }
 
     void OnLeave(IPeer other)

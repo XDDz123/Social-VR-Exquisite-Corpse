@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 using Ubiq.Messaging;
+using Ubiq.Rooms;
 using UnityEngine.Events;
 using UnityEngine;
 
@@ -25,13 +26,19 @@ public class GameSystem : MonoBehaviour
     public GameStateChangedEvent onGameStateChanged = new GameStateChangedEvent();
 
     [Serializable]
+    public class GameLengthChangedEvent : UnityEvent<float> {};
+    public GameLengthChangedEvent onGameLengthChanged  = new GameLengthChangedEvent();
+
+    [Serializable]
     public class TimerChangedEvent : UnityEvent<float> {}
     public TimerChangedEvent onTimerChanged = new TimerChangedEvent();
 
     [Serializable]
     private struct Message
     {
+        public bool request;
         public State state;
+        public float gameLength;
     }
 
     public void ResetGame()
@@ -48,17 +55,29 @@ public class GameSystem : MonoBehaviour
     {
         var args = JsonUtility.FromJson<Message>(msg.ToString());
 
-        SwitchState(args.state);
+        if (args.request) 
+        {
+            SendUpdate();
+        }
+        else
+        {
+            SwitchState(args.state);
+
+            _gameLength = args.gameLength;
+            onGameLengthChanged?.Invoke(_gameLength);
+        }
     }
 
     public void UpdateGameLength(float length)
     {
         _gameLength = length;
+        SendUpdate();
     }
 
     void Start()
     {
         _context = NetworkScene.Register(this);
+        RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
         onGameStateChanged?.Invoke(_state);
     }
 
@@ -78,6 +97,16 @@ public class GameSystem : MonoBehaviour
         }
     }
 
+    private void OnRoom(IRoom other)
+    {
+        _context.SendJson(new Message()
+        {
+            request = true,
+            state = _state,
+            gameLength = _gameLength,
+        });
+    }
+
     private void SwitchState(State state) 
     {
         if (_state == state) {
@@ -91,7 +120,17 @@ public class GameSystem : MonoBehaviour
         }
 
         _state = state;
-        _context.SendJson(new Message() { state = _state });
         onGameStateChanged?.Invoke(state);
+        SendUpdate();
+    }
+
+    private void SendUpdate()
+    {
+        _context.SendJson(new Message()
+        {
+            request = false,
+            state = _state,
+            gameLength = _gameLength,
+        });
     }
 }
