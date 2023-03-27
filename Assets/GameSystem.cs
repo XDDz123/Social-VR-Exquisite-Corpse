@@ -55,7 +55,7 @@ public class GameSystem : MonoBehaviour
     {
         var args = JsonUtility.FromJson<Message>(msg.ToString());
 
-        if (args.request) 
+        if (args.request)
         {
             SendUpdate();
         }
@@ -99,7 +99,7 @@ public class GameSystem : MonoBehaviour
 
     private void OnRoom(IRoom other)
     {
-        SwitchState(State.Prepare);
+        SwitchState(State.Prepare, silent: true);
         _context.SendJson(new Message()
         {
             request = true,
@@ -108,7 +108,7 @@ public class GameSystem : MonoBehaviour
         });
     }
 
-    private void SwitchState(State state) 
+    private void SwitchState(State state, bool silent = false)
     {
         if (_state == state) {
             return;
@@ -122,7 +122,10 @@ public class GameSystem : MonoBehaviour
 
         _state = state;
         onGameStateChanged?.Invoke(state);
-        SendUpdate();
+
+        if (!silent) {
+            SendUpdate();
+        }
     }
 
     private void SendUpdate()
