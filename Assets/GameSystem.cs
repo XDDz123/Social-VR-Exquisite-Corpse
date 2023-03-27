@@ -99,6 +99,7 @@ public class GameSystem : MonoBehaviour
 
     private void OnRoom(IRoom other)
     {
+        SwitchState(State.Prepare);
         _context.SendJson(new Message()
         {
             request = true,
