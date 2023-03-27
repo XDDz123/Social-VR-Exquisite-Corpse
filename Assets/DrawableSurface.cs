@@ -263,11 +263,19 @@ public class DrawableSurface : MonoBehaviour
                 }
 
 
-                if (drawing)
+                if (drawing || Input.GetMouseButton(0))
                 {
                     RaycastHit hit;
+                    bool rayHit = false;
 
-                    if (!Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f))
+                    if (drawing) {
+                        rayHit = Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f);
+                    } else {
+                        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                        rayHit = Physics.Raycast(ray, out hit, 100.0f);
+                    }
+
+                    if (!rayHit)
                     {
                         // reset _lastPosition whenever raycasting no longer hits the object
                         // i.e. draw line should no longer connect when moving the cursor out of the canvas area
