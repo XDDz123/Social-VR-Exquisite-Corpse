@@ -11,6 +11,7 @@ using Ubiq.Rooms;
 public class PlayerSelector : MonoBehaviour
 {
     private NetworkContext context;
+
     public Button left;
     public Button right;
     public GameObject menu;

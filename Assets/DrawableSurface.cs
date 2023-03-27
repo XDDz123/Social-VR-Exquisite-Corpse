@@ -91,9 +91,12 @@ public class DrawableSurface : MonoBehaviour
 
         GetComponent<Renderer>().material = _material;
 
-        if ((GetComponent<Collider>() as MeshCollider) == null)
+        _collider = GetComponent<MeshCollider>();
+
+        if (_collider == null)
         {
             gameObject.AddComponent<MeshCollider>();
+            _collider = GetComponent<MeshCollider>();
         }
 
         _texture_full = new RenderTexture(_texture.width, _texture.height, 24);
@@ -274,74 +277,74 @@ public class DrawableSurface : MonoBehaviour
                 return;
         }
 
-        if (drawing || Input.GetMouseButton(0))
+        if (!drawing && !Input.GetMouseButton(0))
         {
-            RaycastHit hit;
-            bool rayHit = false;
-
-            if (drawing) {
-                rayHit = Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f);
-            } else {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                rayHit = Physics.Raycast(ray, out hit, 100.0f);
-            }
-
-            if (!rayHit)
-            {
-                // reset _lastPosition whenever raycasting no longer hits the object
-                // i.e. draw line should no longer connect when moving the cursor out of the canvas area
-                _lastPosition = null;
-                return;
-            }
-
-            // fixes "Texture coordinate channel "0" not found" error when accessing hit.textureCoord
-            // patch inspired by https://github.com/microsoft/MixedRealityToolkit-Unity/issues/10339
-            // and https://github.com/microsoft/MixedRealityToolkit-Unity/pull/10370
-            MeshCollider meshCollider = hit.collider as MeshCollider;
-
-            if (meshCollider == null)
-            {
-                _lastPosition = null;
-                return;
-            }
-
-            Mesh sharedMesh = meshCollider.sharedMesh;
-            if (sharedMesh == null || !sharedMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0))
-            {
-                _lastPosition = null;
-                return;
-            }
-
-            // checks if the hit object is the drawing canvas
-            // canvas obj's tag is set to "Canvas" in unity
-
-            if (!meshCollider.CompareTag("Canvas"))
-            {
-                _lastPosition = null;
-                return;
-            }
-
-            Vector2 end = hit.textureCoord;
-
-            if (_lastPosition is Vector2 start)
-            {
-                // limit which side the player can draw on
-                if (end.x > 1.0f / player_count * _drawableSide ||
-                    end.x < 1.0f / player_count * (_drawableSide - 1.0f))
-                {
-                    _lastPosition = null;
-                    return;
-                }
-
-                context.SendJson(new Message(2, start, end, _brushColor, _brushSize,
-                                             player_remaining, curr_players));
-
-                DrawOnCanvas(_material, _texture, start, end, _brushColor, _brushSize);
-                DrawOnCanvas(_material_full, _texture_full, start, end, _brushColor, _brushSize);
-            }
-
-            _lastPosition = end;
+            _lastPosition = null;
+            return;
         }
+
+        RaycastHit hit;
+        bool rayHit = false;
+
+        if (drawing) {
+            rayHit = Physics.Raycast(PenPosition, PenDirection, out hit, 100.0f);
+        } else {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            rayHit = Physics.Raycast(ray, out hit, 100.0f);
+        }
+
+        if (!rayHit)
+        {
+            // reset _lastPosition whenever raycasting no longer hits the object
+            // i.e. draw line should no longer connect when moving the cursor out of the canvas area
+            _lastPosition = null;
+            return;
+        }
+
+        // fixes "Texture coordinate channel "0" not found" error when accessing hit.textureCoord
+        // patch inspired by https://github.com/microsoft/MixedRealityToolkit-Unity/issues/10339
+        // and https://github.com/microsoft/MixedRealityToolkit-Unity/pull/10370
+        MeshCollider meshCollider = hit.collider as MeshCollider;
+
+        if (meshCollider == null)
+        {
+            _lastPosition = null;
+            return;
+        }
+
+        Mesh sharedMesh = meshCollider.sharedMesh;
+        if (sharedMesh == null || !sharedMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord0))
+        {
+            _lastPosition = null;
+            return;
+        }
+
+        if (!meshCollider.CompareTag("Canvas"))
+        {
+            _lastPosition = null;
+            return;
+        }
+
+        Vector2 end = hit.textureCoord;
+
+        if (_lastPosition is Vector2 start)
+        {
+            // limit which side the player can draw on
+            if (end.x > 1.0f / player_count * _drawableSide ||
+                end.x < 1.0f / player_count * (_drawableSide - 1.0f))
+            {
+                _lastPosition = null;
+                return;
+            }
+
+            context.SendJson(new Message(2, start, end, _brushColor, _brushSize,
+                                         player_remaining, curr_players));
+
+            DrawOnCanvas(_material, _texture, start, end, _brushColor, _brushSize);
+            DrawOnCanvas(_material_full, _texture_full, start, end, _brushColor, _brushSize);
+        }
+
+        _lastPosition = end;
     }
 
     private void DrawOnCanvas(Material material, RenderTexture texture, Vector2 start, Vector2 end,
