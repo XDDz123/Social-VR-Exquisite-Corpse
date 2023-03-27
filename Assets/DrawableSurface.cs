@@ -34,10 +34,9 @@ public class DrawableSurface : MonoBehaviour
     private float remote_brush_size;
 
     private NetworkId me;
-    private int player_idx;
     private List<NetworkId> curr_players;
 
-    private int drawable_side;
+    private int _drawableSide;
 
     private Texture2D local_tex;
 
@@ -76,7 +75,7 @@ public class DrawableSurface : MonoBehaviour
 
         curr_players = new List<NetworkId>();
 
-        drawable_side = -1;
+        _drawableSide = -1;
         curr_player_done = false;
         count_down_start = false;
         game_end = false;
@@ -262,7 +261,6 @@ public class DrawableSurface : MonoBehaviour
                     }
                 }
 
-
                 if (drawing || Input.GetMouseButton(0))
                 {
                     RaycastHit hit;
@@ -314,16 +312,15 @@ public class DrawableSurface : MonoBehaviour
 
                     if (_lastPosition is Vector2 start)
                     {
-                        if (drawable_side == -1)
+                        if (_drawableSide == -1)
                         {
                             _lastPosition = null;
                             return;
                         }
 
-                        player_idx = drawable_side;
-
                         // limit which side the player can draw on
-                        if (end.x > 1.0f / player_count * player_idx || end.x < 1.0f / player_count * (player_idx - 1.0f))
+                        if (end.x > 1.0f / player_count * _drawableSide ||
+                            end.x < 1.0f / player_count * (_drawableSide - 1.0f))
                         {
                             _lastPosition = null;
                             return;
@@ -368,11 +365,11 @@ public class DrawableSurface : MonoBehaviour
         }
     }
 
-    public void side(int s)
+    public void Side(int s)
     {
         // s = 1 right
         // s = 2 left
-        drawable_side = s;
+        _drawableSide = s;
     }
 
     void DrawOnCanvas(Material material, RenderTexture texture, Vector2 start, Vector2 end, Color brushColor, float brushSize)

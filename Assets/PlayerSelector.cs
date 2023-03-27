@@ -51,7 +51,7 @@ public class PlayerSelector : MonoBehaviour
     {
         GameObject GO = GameObject.Find("Board");
         DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.side(2);
+        canvas.Side(2);
 
         right.enabled = false;
         left.interactable = false;
@@ -63,7 +63,7 @@ public class PlayerSelector : MonoBehaviour
     {
         GameObject GO = GameObject.Find("Board");
         DrawableSurface canvas = GO.GetComponent<DrawableSurface>();
-        canvas.side(1);
+        canvas.Side(1);
 
         left.enabled = false;
         right.interactable = false;
