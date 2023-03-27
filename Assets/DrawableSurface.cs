@@ -274,15 +274,6 @@ public class DrawableSurface : MonoBehaviour
 
     void LateUpdate()
     {
-        // GameObject go = GameObject.Find("Player Selector");
-        GameObject go = null;
-
-        // do nothing when players haven't finished selecting sides
-        if (go != null && go.activeSelf)
-        {
-            return;
-        }
-
         switch(_gameState)
         {
             case GameSystem.State.Prepare:
