@@ -20,6 +20,7 @@ public class GameSystem : MonoBehaviour
     private State _state = State.Prepare;
     private float _gameLength = 10;
     private float _timeRemaining;
+    private bool _silent = false;
 
     [Serializable]
     public class GameStateChangedEvent : UnityEvent<State> {}
@@ -62,14 +63,16 @@ public class GameSystem : MonoBehaviour
             // in the next iteration the function goes into SwitchState in the else case
             // if the state is prepare (because of the added != perpare in return)
             // then then program will attempt to call reset and send out another message
-            // since the game lenght is not changing here we'd start looping in switch state
+            // since the game length is not changing here we'd start looping in switch state
             // so silent is added to update game length
-            UpdateGameLength(args.gameLength, silent: true);
-            SwitchState(args.state, silent: true);
+            _silent = true;
+            UpdateGameLength(args.gameLength);
+            SwitchState(args.state);
+            _silent = false;
         }
     }
 
-    public void UpdateGameLength(float length, bool silent = false)
+    public void UpdateGameLength(float length)
     {
         if (_gameLength == length) {
             return;
@@ -77,8 +80,7 @@ public class GameSystem : MonoBehaviour
 
         _gameLength = length;
 
-        if (!silent)
-        {
+        if (!_silent) {
             SendUpdate();
         }
     }
@@ -108,7 +110,10 @@ public class GameSystem : MonoBehaviour
 
     private void OnRoom(IRoom other)
     {
-        SwitchState(State.Prepare, silent: true);
+        _silent = true;
+        SwitchState(State.Prepare);
+        _silent = false;
+
         _context.SendJson(new Message()
         {
             request = true,
@@ -117,7 +122,7 @@ public class GameSystem : MonoBehaviour
         });
     }
 
-    private void SwitchState(State state, bool silent = false)
+    private void SwitchState(State state)
     {
         // resets the game even if state is already prepare
         if (_state == state && _state != State.Prepare) {
@@ -133,7 +138,7 @@ public class GameSystem : MonoBehaviour
         _state = state;
         onGameStateChanged?.Invoke(state);
 
-        if (!silent) {
+        if (!_silent) {
             SendUpdate();
         }
     }
