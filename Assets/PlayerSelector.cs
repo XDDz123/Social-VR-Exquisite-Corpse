@@ -38,6 +38,10 @@ public class PlayerSelector : MonoBehaviour
             case GameSystem.State.InProgress:
                 menu.SetActive(false);
                 break;
+
+            case GameSystem.State.Finished:
+                menu.SetActive(false);
+                break;
         }
     }
 
@@ -94,14 +98,6 @@ public class PlayerSelector : MonoBehaviour
         {
             left.interactable = data.left;
             right.interactable = data.right;
-        }
-    }
-
-    void Update()
-    {
-        if (!left.interactable && !right.interactable)
-        {
-            menu.SetActive(false);
         }
     }
 

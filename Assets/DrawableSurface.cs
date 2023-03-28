@@ -48,7 +48,6 @@ public class DrawableSurface : MonoBehaviour
     [Serializable]
     private struct DrawArgs
     {
-        public int flag;
         public Vector2 start;
         public Vector2 end;
         public Color brushColor;
@@ -65,7 +64,7 @@ public class DrawableSurface : MonoBehaviour
     [Serializable]
     private struct TextureArgs
     {
-        public int flag;
+        public bool request;
         public string tex;
     }
 
@@ -164,7 +163,7 @@ public class DrawableSurface : MonoBehaviour
 
     private void HandleTextureMessage(TextureArgs args)
     {
-        if (args.flag == 0)
+        if (args.request)
         {
             // if the current player is drawing on some side
             // then send the current drawing over
@@ -181,12 +180,12 @@ public class DrawableSurface : MonoBehaviour
 
                 context.SendJson(new Message(new TextureArgs()
                 {
-                    flag = 1,
+                    request = false,
                     tex = System.Convert.ToBase64String(bytes)
                 }));
             }
         }
-        else if (args.flag == 1)
+        else
         {
             _localTexture.LoadImage(System.Convert.FromBase64String(args.tex));
             Graphics.Blit(_localTexture, _textureFull);
@@ -338,7 +337,6 @@ public class DrawableSurface : MonoBehaviour
 
             context.SendJson(new Message(new DrawArgs()
             {
-                flag = 2,
                 start = start,
                 end = end,
                 brushColor = _brushColor,
@@ -384,12 +382,9 @@ public class DrawableSurface : MonoBehaviour
     void OnRoom(IRoom other)
     {
         Reset();
-
-        Debug.Log("what?");
-
         context.SendJson(new Message(new TextureArgs()
         {
-            flag = 0,
+            request = true,
             tex = null
         }));
     }
