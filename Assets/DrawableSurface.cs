@@ -69,7 +69,6 @@ public class DrawableSurface : MonoBehaviour
 
     private enum MessageType
     {
-        Unknown,
         Draw,
         Player,
         Textures
