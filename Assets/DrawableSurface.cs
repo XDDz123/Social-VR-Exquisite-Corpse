@@ -216,7 +216,7 @@ public class DrawableSurface : MonoBehaviour
 
     public void UpdateBrushSize(float size)
     {
-        _brushSize = 0.01f * size;
+        _brushSize = 0.004f * size;
     }
 
     public void UpdateSide(int side)
