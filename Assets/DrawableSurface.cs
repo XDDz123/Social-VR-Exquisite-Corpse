@@ -62,11 +62,19 @@ public class DrawableSurface : MonoBehaviour
         public NetworkId id;
     }
 
+    [Serializable]
+    private struct TextureArgs
+    {
+        public int flag;
+        public string tex;
+    }
+
     private enum MessageType
     {
         Unknown,
         Draw,
         Player,
+        Textures
     }
 
     [Serializable]
@@ -81,6 +89,9 @@ public class DrawableSurface : MonoBehaviour
                 type = MessageType.Draw;
             } else if (obj.GetType().Equals(typeof(PlayerArgs))) {
                 type = MessageType.Player;
+            } else if (obj.GetType().Equals(typeof(TextureArgs)))
+            {
+                type = MessageType.Textures;
             } else {
                 type = MessageType.Unknown;
             }
@@ -122,6 +133,8 @@ public class DrawableSurface : MonoBehaviour
         _materialFull.mainTexture = _textureFull;
         _materialFull.mainTextureScale = textureScale;
 
+        _localTexture = new Texture2D(_texture.width, _texture.height);
+
         RoomClient.Find(this).OnJoinedRoom.AddListener(OnRoom);
         RoomClient.Find(this).OnPeerRemoved.AddListener(OnLeave);
 
@@ -141,80 +154,55 @@ public class DrawableSurface : MonoBehaviour
             case MessageType.Player:
                 HandlePlayerMessage(JsonUtility.FromJson<PlayerArgs>(container.args));
                 break;
+
+            case MessageType.Textures:
+                HandleTextureMessage(JsonUtility.FromJson<TextureArgs>(container.args));
+                break;
+
+        }
+    }
+
+    private void HandleTextureMessage(TextureArgs args)
+    {
+        if (args.flag == 0)
+        {
+            // if the current player is drawing on some side
+            // then send the current drawing over
+            if (_currPlayers.Contains(_me))
+            {
+                // port render texture from gpu to rexture2d in cpu
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = _textureFull;
+                _localTexture.ReadPixels(new Rect(0, 0, _texture.width, _texture.height), 0, 0);
+                _localTexture.Apply();
+                RenderTexture.active = prev;
+
+                byte[] bytes = _localTexture.EncodeToPNG();
+
+                context.SendJson(new Message(new TextureArgs()
+                {
+                    flag = 1,
+                    tex = System.Convert.ToBase64String(bytes)
+                }));
+            }
+        }
+        else if (args.flag == 1)
+        {
+            _localTexture.LoadImage(System.Convert.FromBase64String(args.tex));
+            Graphics.Blit(_localTexture, _textureFull);
         }
     }
 
     private void HandleDrawMessage(DrawArgs args)
     {
-        // if (args.flag == 0)
-        // {
-        //     // if the current player is drawing on some side
-        //     // then send the current drawing over
-        //     if (_currPlayers.Contains(_me))
-        //     {
-        //         // port render texture from gpu to rexture2d in cpu
-        //         RenderTexture prev = RenderTexture.active;
-        //         RenderTexture.active = _textureFull;
-        //         _localTexture.ReadPixels(new Rect(0, 0, _texture.width, _texture.height), 0, 0);
-        //         _localTexture.Apply();
-        //         RenderTexture.active = prev;
-        //
-        //         // save the current drawing as png
-        //         // https://answers.unity.com/questions/1331297/how-to-save-a-texture2d-into-a-png.html
-        //         byte[] bytes = _localTexture.EncodeToPNG();
-        //         var dirPath = Application.dataPath + "/../TempImages/";
-        //         if (!System.IO.Directory.Exists(dirPath))
-        //         {
-        //             System.IO.Directory.CreateDirectory(dirPath);
-        //         }
-        //         System.IO.File.WriteAllBytes(dirPath + "image" + ".png", bytes);
-        //
-        //         Vector2 temp = new Vector2(0, 0);
-        //         context.SendJson(new Message(new DrawArgs()
-        //         {
-        //             flag = 1,
-        //             start = temp,
-        //             end = temp,
-        //             brushColor = _brushColor,
-        //             brushSize = 0f,
-        //         }));
-        //     }
-        // }
-        // else if (args.flag == 1)
-        // {
-        //     // if the current player is not participating
-        //     // then update their canvas with the received texture
-        //     if (!_currPlayers.Contains(_me))
-        //     {
-        //         byte[] imgData;
-        //         string path = Application.dataPath + "/../TempImages/image.png";
-        //
-        //         // load saved temp image as texture
-        //         if (System.IO.File.Exists(path))
-        //         {
-        //             imgData = System.IO.File.ReadAllBytes(path);
-        //             _localTexture.LoadImage(imgData);
-        //             Graphics.Blit(_localTexture, _textureFull);
-        //         }
-        //
-        //         // display both full canvas when spectating
-        //         if (_currPlayers.Count == 2)
-        //         {
-        //             Graphics.SetRenderTarget(_textureFull);
-        //             GetComponent<Renderer>().material.mainTexture = _textureFull;
-        //         }
-        //     }
-        // }
-        // else
-        // {
 
         if (args.end.x > 0.45f && args.end.x < 0.55f)
         {
             DrawOnCanvas(_material, _texture, args.start, args.end, args.brushColor, args.brushSize);
         }
 
-        DrawOnCanvas(_materialFull, _textureFull, args.start, args.end, args.brushColor, 
-                     args.brushSize);
+        DrawOnCanvas(_materialFull, _textureFull, args.start, args.end, args.brushColor,
+                        args.brushSize);
     }
 
     private void HandlePlayerMessage(PlayerArgs args)
@@ -396,6 +384,14 @@ public class DrawableSurface : MonoBehaviour
     void OnRoom(IRoom other)
     {
         Reset();
+
+        Debug.Log("what?");
+
+        context.SendJson(new Message(new TextureArgs()
+        {
+            flag = 0,
+            tex = null
+        }));
     }
 
     void OnLeave(IPeer other)
