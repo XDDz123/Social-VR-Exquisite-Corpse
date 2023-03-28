@@ -272,6 +272,12 @@ public class DrawableSurface : MonoBehaviour
                 }
                 return;
 
+            case GameSystem.State.InProgress:
+                if (!_currPlayers.Contains(_me)) {
+                    return;
+                }
+                break;
+
             case GameSystem.State.Finished:
                 return;
         }
