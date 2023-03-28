@@ -130,7 +130,7 @@ public class GameSystem : MonoBehaviour
     private void SwitchState(State state)
     {
         // resets the game even if state is already prepare
-        if (_state == state && _state != State.Prepare) {
+        if (_state == state) {
             return;
         }
 
