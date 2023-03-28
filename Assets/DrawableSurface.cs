@@ -225,7 +225,11 @@ public class DrawableSurface : MonoBehaviour
         // s = 2 left
         _drawableSide = side;
 
-        if (!_currPlayers.Contains(_me))
+        if (side == -1) 
+        {
+            _currPlayers.Remove(_me);
+        }
+        else if (side >= 1 && !_currPlayers.Contains(_me))
         {
             _currPlayers.Add(_me);
             _context.SendJson(new Message(new PlayerArgs()

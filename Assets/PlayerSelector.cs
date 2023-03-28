@@ -45,6 +45,17 @@ public class PlayerSelector : MonoBehaviour
         }
     }
 
+    public void ClearSelections()
+    {
+        left.interactable = true;
+        right.interactable = true;
+        left.enabled = true;
+        right.enabled = true;
+
+        onSideChanged?.Invoke(-1);
+        SendUpdate();
+    }
+
     public void Start()
     {
         _context = NetworkScene.Register(this);
