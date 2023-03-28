@@ -35,6 +35,7 @@ public class GameSystem : MonoBehaviour
     {
         public bool request;
         public State state;
+        public float timeRemaining;
         public float gameLength;
     }
 
@@ -58,6 +59,12 @@ public class GameSystem : MonoBehaviour
         }
         else
         {
+            // only update timer if we're joining an in progress game, do it before changing state
+            // so that an update doesn't trigger early end of game.
+            if (args.state == State.InProgress) {
+                _timeRemaining = args.timeRemaining;
+            }
+
             // do not switch states when updating game length
             // using the UpdateGameLength fn would send out another update
             // in the next iteration the function goes into SwitchState in the else case
@@ -79,10 +86,7 @@ public class GameSystem : MonoBehaviour
         }
 
         _gameLength = length;
-
-        if (!_silent) {
-            SendUpdate();
-        }
+        SendUpdate();
     }
 
     void Start()
@@ -118,6 +122,7 @@ public class GameSystem : MonoBehaviour
         {
             request = true,
             state = _state,
+            timeRemaining = _timeRemaining,
             gameLength = _gameLength,
         });
     }
@@ -137,18 +142,20 @@ public class GameSystem : MonoBehaviour
 
         _state = state;
         onGameStateChanged?.Invoke(state);
-
-        if (!_silent) {
-            SendUpdate();
-        }
+        SendUpdate();
     }
 
     private void SendUpdate()
     {
+        if (_silent) {
+            return;
+        }
+
         _context.SendJson(new Message()
         {
             request = false,
             state = _state,
+            timeRemaining = _timeRemaining,
             gameLength = _gameLength,
         });
     }

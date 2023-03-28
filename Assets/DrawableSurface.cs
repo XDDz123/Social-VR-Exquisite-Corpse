@@ -9,7 +9,7 @@ using UnityEditor;
 
 public class DrawableSurface : MonoBehaviour
 {
-    private NetworkContext context;
+    private NetworkContext _context;
 
     private Material _material;
     private RenderTexture _texture;
@@ -17,16 +17,15 @@ public class DrawableSurface : MonoBehaviour
     private Material _materialFull;
     private RenderTexture _textureFull;
 
-    private Vector2? _lastPosition;
+    private Vector2? _lastPosition = null;
     private Color _brushColor = Color.black;
     private float _brushSize = 0.01f;
 
     private GameSystem.State _gameState;
+    private int _drawableSide;
 
     private NetworkId _me;
     private List<NetworkId> _currPlayers;
-
-    private int _drawableSide;
 
     private Texture2D _localTexture;
 
@@ -88,11 +87,10 @@ public class DrawableSurface : MonoBehaviour
                 type = MessageType.Draw;
             } else if (obj.GetType().Equals(typeof(PlayerArgs))) {
                 type = MessageType.Player;
-            } else if (obj.GetType().Equals(typeof(TextureArgs)))
-            {
+            } else if (obj.GetType().Equals(typeof(TextureArgs))) {
                 type = MessageType.Textures;
             } else {
-                type = MessageType.Unknown;
+                throw new NotImplementedException();
             }
 
             args = JsonUtility.ToJson(obj);
@@ -101,8 +99,8 @@ public class DrawableSurface : MonoBehaviour
 
     public void Start()
     {
-        context = NetworkScene.Register(this);
-        _me = context.Scene.Id;
+        _context = NetworkScene.Register(this);
+        _me = _context.Scene.Id;
 
         // Create the texture that will be drawn on
         _texture = new RenderTexture(1024, 1024, 24);
@@ -178,7 +176,7 @@ public class DrawableSurface : MonoBehaviour
 
                 byte[] bytes = _localTexture.EncodeToPNG();
 
-                context.SendJson(new Message(new TextureArgs()
+                _context.SendJson(new Message(new TextureArgs()
                 {
                     request = false,
                     tex = System.Convert.ToBase64String(bytes)
@@ -231,7 +229,7 @@ public class DrawableSurface : MonoBehaviour
         if (!_currPlayers.Contains(_me))
         {
             _currPlayers.Add(_me);
-            context.SendJson(new Message(new PlayerArgs()
+            _context.SendJson(new Message(new PlayerArgs()
             {
                 request = false,
                 id = _me,
@@ -266,7 +264,7 @@ public class DrawableSurface : MonoBehaviour
         switch(_gameState)
         {
             case GameSystem.State.Prepare:
-                if (_drawableSide != -1 && _currPlayers.Count == playerCount) {
+                if (_drawableSide != -1 && _currPlayers.Contains(_me) && _currPlayers.Count == playerCount) {
                     onDrawingBegun?.Invoke();
                 }
                 return;
@@ -335,7 +333,7 @@ public class DrawableSurface : MonoBehaviour
                 return;
             }
 
-            context.SendJson(new Message(new DrawArgs()
+            _context.SendJson(new Message(new DrawArgs()
             {
                 start = start,
                 end = end,
@@ -382,7 +380,7 @@ public class DrawableSurface : MonoBehaviour
     void OnRoom(IRoom other)
     {
         Reset();
-        context.SendJson(new Message(new TextureArgs()
+        _context.SendJson(new Message(new TextureArgs()
         {
             request = true,
             tex = null
