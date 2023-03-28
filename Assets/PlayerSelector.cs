@@ -97,6 +97,14 @@ public class PlayerSelector : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if (!left.interactable && !right.interactable)
+        {
+            menu.SetActive(false);
+        }
+    }
+
     private void Reset()
     {
         menu.SetActive(true);
