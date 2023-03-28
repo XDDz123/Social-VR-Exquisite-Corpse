@@ -57,19 +57,30 @@ public class GameSystem : MonoBehaviour
         }
         else
         {
+            // do not switch states when updating game length
+            // using the UpdateGameLength fn would send out another update
+            // in the next iteration the function goes into SwitchState in the else case
+            // if the state is prepare (because of the added != perpare in return)
+            // then then program will attempt to call reset and send out another message
+            // since the game lenght is not changing here we'd start looping in switch state
+            // so silent is added to update game length
+            UpdateGameLength(args.gameLength, silent: true);
             SwitchState(args.state, silent: true);
-            UpdateGameLength(args.gameLength);
         }
     }
 
-    public void UpdateGameLength(float length)
+    public void UpdateGameLength(float length, bool silent = false)
     {
         if (_gameLength == length) {
             return;
         }
 
         _gameLength = length;
-        SendUpdate();
+
+        if (!silent)
+        {
+            SendUpdate();
+        }
     }
 
     void Start()
@@ -108,7 +119,8 @@ public class GameSystem : MonoBehaviour
 
     private void SwitchState(State state, bool silent = false)
     {
-        if (_state == state) {
+        // resets the game even if state is already prepare
+        if (_state == state && _state != State.Prepare) {
             return;
         }
 
