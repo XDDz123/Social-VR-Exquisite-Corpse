@@ -44,4 +44,4 @@ We have implemented several menu panels for the game namely:
 
 # Contributors
 Virtual Environments Group 19. </br>
-LaTeX version of the readme aviliable in the file VE_Report.pdf.
+LaTeX version of the readme is available in the file VE_Report.pdf.
