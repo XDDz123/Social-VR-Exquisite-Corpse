@@ -6,7 +6,7 @@ Our group approached the task by first examining the traditional game and explor
 * Networking - Developing the networking functionalities of the game.
 * Canvas - Developing the drawing canvas.
 * Menu - Developing menu panels for different functions of the game.
-## Development \& Highlights
+# Development \& Highlights
 ## Networking
 We have taken into consideration the late join and early leave behavior of players in addition to network synchronization. This allows players to join and leave the room seamlessly at any point during gameplay. 
 ### Late Join
@@ -42,6 +42,6 @@ We have implemented several menu panels for the game namely:
 2. **Restart Menu**</br></br> ![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/d6ec2d51-8a3a-4cf6-a035-e4cd2e3835b4) </br></br> The restart menu allows players to restart the game manually. Players can also adjust the duration of the game using the time slider as seen in Fig 5. In addition to this, they can also teleport the pen to its original position using teleport pen button.</br></br>
 3. **Player Selection Menu**</br></br> ![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/0a7bc710-6583-450f-a6e4-fac2c37cd2ea) </br></br> Upon entering the game, a Select Sides panel will appear on the canvas. This allows players to choose which side they want to draw on. Once a side has been selected, its box will turn grey to indicate that it has already been selected by another player as seen in Fig 6.</br></br>
 
-## Contributors
+# Contributors
 Virtual Environments Group 19. </br>
 LaTeX version of the readme aviliable in the file VE_Report.pdf.
