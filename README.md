@@ -1,12 +1,12 @@
 # Social VR Exquisite Corpse
 Exquisite corpse is a game that involves creating a drawing on a single paper where each participant contributes to a part, without seeing the other parts. The resulting creation is a collaborative and often bizarre piece of art. </br>
 We have developed this concept in a virtual environment that allows players to create exquisite corpse designs with other players in VR on a shared canvas. This provides players with the opportunity to collaborate and express their creativity in a digital realm.</br>
-# Approach \& Goals
+## Approach \& Goals
 Our group approached the task by first examining the traditional game and exploring ways to translate its mechanics into a virtual reality experience. We then split the development into different tasks:
 * Networking - Developing the networking functionalities of the game.
 * Canvas - Developing the drawing canvas.
 * Menu - Developing menu panels for different functions of the game.
-# Development \& Highlights
+## Development \& Highlights
 ## Networking
 We have taken into consideration the late join and early leave behavior of players in addition to network synchronization. This allows players to join and leave the room seamlessly at any point during gameplay. 
 ### Late Join
@@ -38,9 +38,9 @@ Once the number of participants registered with the canvas matches the **playerC
 
 ## Menu
 We have implemented several menu panels for the game namely:
-1. **Brush Settings Control Panel** </br> </br>![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/2182e699-2216-42c7-a51e-ef6010adcb5e) </br></br> The panel allows players to choose between two tools: the brush and the eraser. The brush tool allows players to paint their designs on the canvas in a range of colors and sizes, while the eraser tool lets them selectively erase parts of their drawing by changing the colour of the brush to white. Players can also fully customize their colours and add them to a palette. To create a specific color, players can adjust the three sliders - Hue, Saturation, and Value - until they achieve their desired color. In addition, the size of the brush can be adjusted using the size slider.
-2. **Restart Menu**</br></br> ![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/d6ec2d51-8a3a-4cf6-a035-e4cd2e3835b4) </br></br> The restart menu allows players to restart the game manually. Players can also adjust the duration of the game using the time slider as seen in Fig 5. In addition to this, they can also teleport the pen to its original position using teleport pen button.
-3. **Player Selection Menu**</br></br> ![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/0a7bc710-6583-450f-a6e4-fac2c37cd2ea) </br></br> Upon entering the game, a Select Sides panel will appear on the canvas. This allows players to choose which side they want to draw on. Once a side has been selected, its box will turn grey to indicate that it has already been selected by another player as seen in Fig 6.
+1. **Brush Settings Control Panel** </br> </br>![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/2182e699-2216-42c7-a51e-ef6010adcb5e) </br></br> The panel allows players to choose between two tools: the brush and the eraser. The brush tool allows players to paint their designs on the canvas in a range of colors and sizes, while the eraser tool lets them selectively erase parts of their drawing by changing the colour of the brush to white. Players can also fully customize their colours and add them to a palette. To create a specific color, players can adjust the three sliders - Hue, Saturation, and Value - until they achieve their desired color. In addition, the size of the brush can be adjusted using the size slider.</br></br>
+2. **Restart Menu**</br></br> ![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/d6ec2d51-8a3a-4cf6-a035-e4cd2e3835b4) </br></br> The restart menu allows players to restart the game manually. Players can also adjust the duration of the game using the time slider as seen in Fig 5. In addition to this, they can also teleport the pen to its original position using teleport pen button.</br></br>
+3. **Player Selection Menu**</br></br> ![image](https://github.com/XDDz123/Social-VR-Exquisite-Corpse/assets/20507222/0a7bc710-6583-450f-a6e4-fac2c37cd2ea) </br></br> Upon entering the game, a Select Sides panel will appear on the canvas. This allows players to choose which side they want to draw on. Once a side has been selected, its box will turn grey to indicate that it has already been selected by another player as seen in Fig 6.</br></br>
 
 ## Contributors
 Virtual Environments Group 19. </br>
